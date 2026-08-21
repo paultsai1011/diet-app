@@ -358,10 +358,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=12"></script>
-<script src="products.js?v=12"></script>
-<script src="app.js?v=12"></script>
-<script src="sync.js?v=12"></script>
+<script src="firebase-config.js?v=13"></script>
+<script src="products.js?v=13"></script>
+<script src="app.js?v=13"></script>
+<script src="sync.js?v=13"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -918,23 +918,43 @@ function renderRecords() {
 
   list.innerHTML = records
     .map((r) => {
+      const isInjection = !!(r.frequency || r.site);
+      const isBody = !!(r.weight || r.bodyFat);
+
       const freqLabel =
         r.frequency === "weekly" ? "每週一次" : r.frequency === "biweekly" ? "每兩週一次" : r.frequency === "custom" ? `每 ${r.customDays} 天` : "—";
       const siteLabel = r.site ? formatSite(r.site, r.side) : "—";
       const weightLabel = r.weight ? r.weight + " kg" : "—";
       const bodyFatLabel = r.bodyFat ? r.bodyFat + " %" : "—";
+
+      // 用標籤清楚區分這筆是「施打」還是「體重」，避免同一天出現兩張卡片時看起來像記錯
+      let tag, fieldsHtml;
+      if (isInjection && !isBody) {
+        tag = `<span class="record-tag injection">💉 施打</span>`;
+        fieldsHtml = `
+          <div class="rc-field"><span class="rc-label">頻率</span><span class="rc-value">${freqLabel}</span></div>
+          <div class="rc-field"><span class="rc-label">部位</span><span class="rc-value">${siteLabel}</span></div>`;
+      } else if (isBody && !isInjection) {
+        tag = `<span class="record-tag body">⚖️ 體重</span>`;
+        fieldsHtml = `
+          <div class="rc-field"><span class="rc-label">體重</span><span class="rc-value">${weightLabel}</span></div>
+          <div class="rc-field"><span class="rc-label">體脂</span><span class="rc-value">${bodyFatLabel}</span></div>`;
+      } else {
+        tag = `<span class="record-tag">📝 紀錄</span>`;
+        fieldsHtml = `
+          <div class="rc-field"><span class="rc-label">頻率</span><span class="rc-value">${freqLabel}</span></div>
+          <div class="rc-field"><span class="rc-label">部位</span><span class="rc-value">${siteLabel}</span></div>
+          <div class="rc-field"><span class="rc-label">體重</span><span class="rc-value">${weightLabel}</span></div>
+          <div class="rc-field"><span class="rc-label">體脂</span><span class="rc-value">${bodyFatLabel}</span></div>`;
+      }
+
       return `
         <div class="record-card">
           <div class="record-card-header">
-            <strong>${r.date}</strong>
+            <span><strong>${r.date}</strong> ${tag}</span>
             <button class="icon-btn" title="刪除" onclick="handleDeleteRecord('${r.id}')">✕</button>
           </div>
-          <div class="record-card-grid">
-            <div class="rc-field"><span class="rc-label">頻率</span><span class="rc-value">${freqLabel}</span></div>
-            <div class="rc-field"><span class="rc-label">部位</span><span class="rc-value">${siteLabel}</span></div>
-            <div class="rc-field"><span class="rc-label">體重</span><span class="rc-value">${weightLabel}</span></div>
-            <div class="rc-field"><span class="rc-label">體脂</span><span class="rc-value">${bodyFatLabel}</span></div>
-          </div>
+          <div class="record-card-grid">${fieldsHtml}</div>
           ${r.note ? `<div class="record-card-note">${r.note}</div>` : ""}
         </div>`;
     })

@@ -360,6 +360,27 @@ button.ghost.small {
   font-size: 13.5px;
   color: var(--text-hi);
 }
+.record-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: 'Noto Sans TC', sans-serif;
+  border: 1px solid var(--line);
+  color: var(--text-mid);
+  vertical-align: middle;
+}
+.record-tag.injection {
+  color: var(--amber-400);
+  border-color: var(--amber-500);
+  background: rgba(242,164,68,.08);
+}
+.record-tag.body {
+  color: var(--ok);
+  border-color: var(--ok);
+  background: rgba(127,212,160,.08);
+}
 .record-card-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
