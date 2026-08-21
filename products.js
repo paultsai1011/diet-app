@@ -67,6 +67,18 @@ const PRODUCTS = [
   { id: "d02", name: "無糖美式咖啡（中杯）", store: "family", category: "drink", meals: ["breakfast","lunch","dinner"], kcal: 5, protein: 0, carbs: 1, fat: 0 },
   { id: "d03", name: "無糖綠茶", store: "711", category: "drink", meals: ["breakfast","lunch","dinner"], kcal: 0, protein: 0, carbs: 0, fat: 0 },
   { id: "d04", name: "無糖綠茶", store: "family", category: "drink", meals: ["breakfast","lunch","dinner"], kcal: 0, protein: 0, carbs: 0, fat: 0 },
+
+  // ---------- 加碼：熱量較高的品項，讓三餐組合更容易湊到每日目標 ----------
+  { id: "p13", name: "雙倍舒肥雞胸（原味）", store: "711", category: "protein", meals: ["lunch","dinner"], kcal: 230, protein: 45, carbs: 3, fat: 5, note: "兩份雞胸一起吃" },
+  { id: "p14", name: "鮪魚蛋沙拉三明治", store: "family", category: "carb", meals: ["breakfast","lunch"], kcal: 340, protein: 14, carbs: 32, fat: 17 },
+  { id: "p15", name: "起司豬排三明治", store: "711", category: "carb", meals: ["breakfast","lunch"], kcal: 380, protein: 18, carbs: 35, fat: 19 },
+  { id: "p16", name: "培根蛋堡", store: "family", category: "carb", meals: ["breakfast"], kcal: 350, protein: 15, carbs: 30, fat: 18 },
+  { id: "p17", name: "焗烤雞肉義大利麵", store: "family", category: "carb", meals: ["lunch","dinner"], kcal: 420, protein: 18, carbs: 50, fat: 15 },
+  { id: "p18", name: "牛肉咖哩飯", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 450, protein: 16, carbs: 62, fat: 14 },
+  { id: "p19", name: "高蛋白飲（巧克力）", store: "711", category: "dairy", meals: ["breakfast","lunch","dinner"], kcal: 160, protein: 20, carbs: 10, fat: 4, note: "點心/加餐用" },
+  { id: "p20", name: "堅果棒", store: "family", category: "protein", meals: ["breakfast","lunch","dinner"], kcal: 180, protein: 6, carbs: 16, fat: 11, note: "點心/加餐用" },
+  { id: "p21", name: "大亨堡（起司）", store: "family", category: "carb", meals: ["breakfast","lunch"], kcal: 320, protein: 12, carbs: 30, fat: 16 },
+  { id: "p22", name: "牛肉燴飯", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 480, protein: 20, carbs: 65, fat: 15 },
 ];
 
 /* 品項分類與餐別的中文對照表，UI 會用到 */
