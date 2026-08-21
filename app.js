@@ -82,46 +82,57 @@ function recommendCombos(mealType, storeFilter, calorieTarget, proteinTarget, co
     drink: all.filter((p) => p.category === "drink"),
   };
 
-  const combos = [];
-  const lowerBound = calorieTarget * 0.7;
-  const upperBound = calorieTarget * 1.3;
+  const allCombos = [];
 
-  // 窮舉 蛋白質 x 主食 x (可選)蔬菜/湯 的組合，數量不大，直接暴力組合即可
+  // 窮舉 蛋白質 x 主食 x (可選)蔬菜/湯/多一份蛋白質 的組合
+  // extras 裡加入蛋白質類，讓組合有機會湊到更高的熱量，貼近目標
   for (const pr of byCat.protein.length ? byCat.protein : [null]) {
     for (const cb of byCat.carb.length ? byCat.carb : [null]) {
-      const extras = [...byCat.veg, ...byCat.soup, null]; // null = 不加
+      const extras = [
+        ...byCat.veg,
+        ...byCat.soup,
+        ...byCat.protein.filter((p) => !pr || p.id !== pr.id),
+        null,
+      ];
       for (const ex of extras) {
         const items = [pr, cb, ex].filter(Boolean);
         if (items.length === 0) continue;
         const kcal = items.reduce((s, i) => s + i.kcal, 0);
         const protein = items.reduce((s, i) => s + i.protein, 0);
-        if (kcal < lowerBound || kcal > upperBound) continue;
-        combos.push({ items, kcal, protein });
+        allCombos.push({ items, kcal, protein });
       }
     }
   }
 
-  if (combos.length === 0) return [];
+  if (allCombos.length === 0) return [];
 
-  // 排序：優先貼近熱量目標，其次蛋白質愈高愈好
-  combos.sort((a, b) => {
-    const distA = Math.abs(a.kcal - calorieTarget);
-    const distB = Math.abs(b.kcal - calorieTarget);
-    if (Math.abs(distA - distB) > 30) return distA - distB;
-    return b.protein - a.protein;
-  });
-
-  // 去除重複組合（同樣品項名稱組合只留一個），並取前 N 組，帶一點隨機性方便「換一組」
+  // 去除重複組合（同樣品項名稱組合只留一個）
   const seen = new Set();
   const uniq = [];
-  for (const c of combos) {
+  for (const c of allCombos) {
     const key = c.items.map((i) => i.id).sort().join("|");
     if (seen.has(key)) continue;
     seen.add(key);
     uniq.push(c);
   }
 
-  const pool = uniq.slice(0, Math.max(count * 4, 12));
+  // 先試著找「合理範圍內」（目標的 60%~140%）的組合；
+  // 真的找不到（品項太少湊不出來）就放寬到全部候選，一律用「離目標多近」排序，
+  // 這樣一定會回傳東西，也一定是目前資料庫裡能湊到最接近目標的選擇
+  const lowerBound = calorieTarget * 0.6;
+  const upperBound = calorieTarget * 1.4;
+  let candidates = uniq.filter((c) => c.kcal >= lowerBound && c.kcal <= upperBound);
+  if (candidates.length === 0) candidates = uniq;
+
+  // 排序：優先貼近熱量目標，其次蛋白質愈高愈好（達標優先於單純接近）
+  candidates.sort((a, b) => {
+    const distA = Math.abs(a.kcal - calorieTarget);
+    const distB = Math.abs(b.kcal - calorieTarget);
+    if (Math.abs(distA - distB) > 30) return distA - distB;
+    return b.protein - a.protein;
+  });
+
+  const pool = candidates.slice(0, Math.max(count * 4, 12));
   // 洗牌後取前 count 組，讓每次點「換一組」有變化
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -241,6 +252,12 @@ function saveMealLogEntry(entry) {
 function deleteMealLogEntry(id) {
   const list = JSON.parse(localStorage.getItem(LS_MEAL_LOG) || "[]");
   localStorage.setItem(LS_MEAL_LOG, JSON.stringify(list.filter((r) => r.id !== id)));
+}
+
+// 刪除某一天所有的飲食紀錄
+function deleteMealLogsForDate(date) {
+  const list = JSON.parse(localStorage.getItem(LS_MEAL_LOG) || "[]");
+  localStorage.setItem(LS_MEAL_LOG, JSON.stringify(list.filter((r) => r.date !== date)));
 }
 
 function getMealLogsForDate(date) {

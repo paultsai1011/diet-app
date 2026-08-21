@@ -129,6 +129,8 @@
       </div>
     </div>
 
+    <div id="dayPlanSummary"></div>
+
     <div id="dayPlan">
       <div class="meal-block" data-meal="breakfast">
         <div class="meal-block-header">
@@ -291,6 +293,38 @@
         <input type="number" id="recBodyFat" step="0.1" placeholder="例如 28.5">
       </div>
     </div>
+
+    <div style="margin-top:6px;padding-top:12px;border-top:1px dashed var(--line);">
+      <label style="margin-bottom:2px;">同時更新基本資料（選填）</label>
+      <p style="font-size:12px;color:var(--text-mid);margin:0 0 10px;">
+        填了年齡、身高、活動量，存檔時會直接用這筆的體重重新算 BMR/TDEE，
+        更新「01 基本資料」，並沿用到你下一次更新施打紀錄為止。
+      </p>
+      <div class="field-row">
+        <div>
+          <label for="recAge">年齡</label>
+          <input type="number" id="recAge" placeholder="例如 32">
+        </div>
+        <div>
+          <label for="recHeight">身高（cm）</label>
+          <input type="number" id="recHeight" placeholder="例如 160">
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label for="recActivity">活動量</label>
+          <select id="recActivity">
+            <option value="">不更新</option>
+            <option value="sedentary">久坐</option>
+            <option value="light">輕度活動</option>
+            <option value="moderate">中度活動</option>
+            <option value="active">高度活動</option>
+          </select>
+        </div>
+        <div></div>
+      </div>
+    </div>
+
     <div class="field-row">
       <div style="grid-column: span 2;">
         <label for="recNote">備註</label>
@@ -321,10 +355,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=2"></script>
-<script src="products.js?v=2"></script>
-<script src="app.js?v=2"></script>
-<script src="sync.js?v=2"></script>
+<script src="firebase-config.js?v=3"></script>
+<script src="products.js?v=3"></script>
+<script src="app.js?v=3"></script>
+<script src="sync.js?v=3"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -355,7 +389,10 @@ wirePills("storePills", (v) => {
 });
 
 document.querySelectorAll("[data-shuffle]").forEach((btn) => {
-  btn.addEventListener("click", () => renderMealBlock(btn.dataset.shuffle));
+  btn.addEventListener("click", () => {
+    renderMealBlock(btn.dataset.shuffle);
+    renderDayPlanSummary();
+  });
 });
 
 document.getElementById("calcBtn").addEventListener("click", () => {
@@ -408,6 +445,28 @@ function loadProfile() {
 // 一次產生早/午/晚三個區塊
 function renderDayPlan() {
   MEAL_TYPES.forEach((mealType) => renderMealBlock(mealType));
+  renderDayPlanSummary();
+}
+
+// 顯示「目前三餐建議合計 vs 每日目標」，讓你在吃之前就知道夠不夠，不用等記錄完才發現
+function renderDayPlanSummary() {
+  const el = document.getElementById("dayPlanSummary");
+  if (!el) return;
+
+  if (!profile || MEAL_TYPES.some((m) => !dayPlan[m])) {
+    el.innerHTML = "";
+    return;
+  }
+
+  const totalKcal = MEAL_TYPES.reduce((s, m) => s + dayPlan[m].kcal, 0);
+  const totalProtein = MEAL_TYPES.reduce((s, m) => s + dayPlan[m].protein, 0);
+  const isLow = totalKcal < profile.bmr;
+  const isUnderTarget = totalKcal < profile.target;
+
+  el.innerHTML = `<div class="status-banner ${isLow ? "warn" : "ok"}" style="margin-bottom:14px;">
+    目前三餐建議合計 ${Math.round(totalKcal)} kcal（蛋白質 ${Math.round(totalProtein)} g）／ 每日目標 ${Math.round(profile.target)} kcal
+    ${isLow ? "（距離 BMR 還有落差，資料庫裡目前湊不出更高熱量的組合，建議在下方「手動記錄」多加一份點心）" : isUnderTarget ? "（略低於目標，屬於可接受範圍）" : ""}
+  </div>`;
 }
 
 // 產生（或換一組）單一餐別的建議卡片
@@ -575,6 +634,7 @@ function renderDailyLogSummary() {
     <label>${date} 紀錄（合計 ${Math.round(totalKcal)} kcal · 蛋白質 ${Math.round(totalProtein)} g）</label>
     ${statusHtml}
     ${rows}
+    <button class="ghost" style="margin-top:4px;" onclick="handleDeleteDayLogs('${date}')">🗑 刪除 ${date} 整天紀錄</button>
   `;
 
   renderLogHistory();
@@ -615,7 +675,15 @@ function renderLogHistory() {
 }
 
 function handleDeleteMealLog(id) {
+  if (!confirm("確定要刪除這筆紀錄嗎？")) return;
   deleteMealLogEntry(id);
+  renderDailyLogSummary();
+  maybeSync();
+}
+
+function handleDeleteDayLogs(date) {
+  if (!confirm(`確定要刪除 ${date} 整天的所有紀錄嗎？這個動作沒辦法復原。`)) return;
+  deleteMealLogsForDate(date);
   renderDailyLogSummary();
   maybeSync();
 }
@@ -712,6 +780,47 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
 
   saveRecordEntry({ date, frequency, customDays, site, side, weight, bodyFat, note });
 
+  // 如果同時填了年齡/身高/活動量，就用這筆的體重直接重新算基本資料，
+  // 更新後的結果會沿用到下一次更新施打紀錄為止
+  const recAge = parseFloat(document.getElementById("recAge").value);
+  const recHeight = parseFloat(document.getElementById("recHeight").value);
+  const recActivity = document.getElementById("recActivity").value;
+
+  if (recAge && recHeight && recActivity && weight) {
+    const bmr = calcBMR({ gender, age: recAge, heightCm: recHeight, weightKg: weight });
+    const tdee = calcTDEE(bmr, recActivity);
+    const target = calcTargetCalories(bmr, tdee, deficitPct);
+    const protein = calcProteinTarget(weight);
+
+    profile = { bmr, tdee, target, protein, weightKg: weight };
+    localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
+
+    // 同步更新「01 基本資料」上的欄位跟顯示，這樣兩區塊看到的數字一致
+    document.getElementById("age").value = recAge;
+    document.getElementById("height").value = recHeight;
+    document.getElementById("weight").value = weight;
+    document.getElementById("activity").value = recActivity;
+    document.getElementById("bmrVal").textContent = Math.round(bmr);
+    document.getElementById("tdeeVal").textContent = Math.round(tdee);
+    document.getElementById("targetVal").textContent = Math.round(target);
+    document.getElementById("proteinVal").textContent = Math.round(protein) + " g";
+    const banner = document.getElementById("statusBanner");
+    const tdeeTargetRaw = tdee * (1 - deficitPct);
+    if (tdeeTargetRaw < bmr) {
+      banner.className = "status-banner warn";
+      banner.textContent =
+        "這次的減量幅度會讓每日攝取低於基礎代謝率（BMR）。系統已自動把每日建議攝取量拉回 BMR，避免代謝率下降與肌肉流失。";
+    } else {
+      banner.className = "status-banner ok";
+      banner.textContent = "目前的每日建議攝取量高於基礎代謝率，屬於安全範圍。";
+    }
+    document.getElementById("resultBlock").style.display = "block";
+    renderDayPlan();
+    renderDailyLogSummary();
+
+    showToast("已用這次施打紀錄更新基本資料");
+  }
+
   document.getElementById("recNote").value = "";
   document.getElementById("recWeight").value = "";
   document.getElementById("recBodyFat").value = "";
@@ -794,6 +903,7 @@ function renderRecords() {
 }
 
 function handleDeleteRecord(id) {
+  if (!confirm("確定要刪除這筆施打/身體紀錄嗎？")) return;
   deleteRecordEntry(id);
   renderRecords();
   prefillRecordForm();
