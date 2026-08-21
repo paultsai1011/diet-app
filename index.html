@@ -763,6 +763,25 @@ document.getElementById("importFile").addEventListener("change", (e) => {
   reader.readAsText(file);
 });
 
+// 給 sync.js 呼叫：登入/登出、拉回雲端資料後，重新渲染畫面內容（不整頁重新整理）
+function refreshAppUI() {
+  loadProfile();
+  if (profile) {
+    document.getElementById("bmrVal").textContent = Math.round(profile.bmr);
+    document.getElementById("tdeeVal").textContent = Math.round(profile.tdee);
+    document.getElementById("targetVal").textContent = Math.round(profile.target);
+    document.getElementById("proteinVal").textContent = Math.round(profile.protein) + " g";
+    document.getElementById("resultBlock").style.display = "block";
+  } else {
+    document.getElementById("resultBlock").style.display = "none";
+  }
+  populateManualProductSelect();
+  renderDayPlan();
+  renderRecords();
+  renderDailyLogSummary();
+}
+window.refreshAppUI = refreshAppUI;
+
 renderRecords();
 if (typeof initSyncUI === "function") initSyncUI();
 </script>

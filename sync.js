@@ -117,11 +117,11 @@ function initSyncUI() {
     if (user) {
       setSyncStatus("同步中…");
       await pullFromCloud();
-      // 重新載入頁面，讓所有畫面用雲端拉回來的最新資料重新渲染
-      if (!window._justLoggedIn) {
-        window._justLoggedIn = true;
-        location.reload();
+      // 不整頁重新整理，直接請主程式重新渲染畫面內容，避免無限重整
+      if (typeof window.refreshAppUI === "function") {
+        window.refreshAppUI();
       }
+      setSyncStatus("✓ 已同步");
     }
   });
 
@@ -154,6 +154,8 @@ function initSyncUI() {
 
   document.getElementById("syncLogoutBtn").addEventListener("click", async () => {
     await auth.signOut();
-    window._justLoggedIn = false;
+    if (typeof window.refreshAppUI === "function") {
+      window.refreshAppUI();
+    }
   });
 }
