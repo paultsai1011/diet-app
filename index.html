@@ -73,11 +73,39 @@
       <div class="status-banner" id="statusBanner"></div>
     </div>
     <div id="noProfileNote" class="empty-note" style="margin-bottom:16px;">
-      還沒有基本資料。新增第一筆紀錄時，年齡/身高/體重/活動量都填上就會自動算出來
-      （如果還沒真的要記錄施打，頻率選「這筆非施打，僅記錄體重」就可以）。
+      還沒有基本資料。先在下方記錄一次體重，再到「施打紀錄」新增一筆時填上年齡/身高/活動量，
+      就會自動算出 BMR。
     </div>
 
-    <div class="field-row">
+    <!-- 體重/體脂肪：獨立出來，適合每天量測、隨時記錄 -->
+    <div style="padding-bottom:14px;margin-bottom:16px;border-bottom:1px dashed var(--line);">
+      <label>體重與體脂肪</label>
+      <p style="font-size:12px;color:var(--text-mid);margin:2px 0 10px;">
+        跟施打分開記錄，量測當下隨時記就好，可以每天都記。
+      </p>
+      <div class="field-row">
+        <div>
+          <label for="quickDate">日期</label>
+          <input type="date" id="quickDate">
+        </div>
+        <div></div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label for="quickWeight">體重（kg）</label>
+          <input type="number" id="quickWeight" step="0.1" placeholder="例如 64.5">
+        </div>
+        <div>
+          <label for="quickBodyFat">體脂肪（%）</label>
+          <input type="number" id="quickBodyFat" step="0.1" placeholder="例如 28.5">
+        </div>
+      </div>
+      <button class="primary" id="quickLogBtn">記錄體重</button>
+    </div>
+
+    <!-- 施打紀錄：頻率較低，跟體重分開 -->
+    <label>施打紀錄</label>
+    <div class="field-row" style="margin-top:8px;">
       <div>
         <label for="recDate">日期</label>
         <input type="date" id="recDate">
@@ -88,7 +116,7 @@
           <option value="weekly">每週一次</option>
           <option value="biweekly">每兩週一次</option>
           <option value="custom">自訂天數</option>
-          <option value="">（這筆非施打，僅記錄體重）</option>
+          <option value="">（這筆非施打，不記錄頻率）</option>
         </select>
       </div>
     </div>
@@ -119,22 +147,12 @@
         </select>
       </div>
     </div>
-    <div class="field-row">
-      <div>
-        <label for="recWeight">體重（kg）</label>
-        <input type="number" id="recWeight" step="0.1" placeholder="例如 64.5">
-      </div>
-      <div>
-        <label for="recBodyFat">體脂肪（%）</label>
-        <input type="number" id="recBodyFat" step="0.1" placeholder="例如 28.5">
-      </div>
-    </div>
 
     <div style="margin-top:6px;padding-top:12px;border-top:1px dashed var(--line);">
       <label style="margin-bottom:2px;">同時更新基本資料（選填）</label>
       <p style="font-size:12px;color:var(--text-mid);margin:0 0 10px;">
-        填了年齡、身高、活動量，存檔時會直接用這筆的體重重新算 BMR/TDEE，
-        更新上方的基本資料，並沿用到你下一次更新施打紀錄為止。
+        填了年齡、身高、活動量，存檔時會用「你最近一次記錄的體重」重新算 BMR/TDEE，
+        更新上方的基本資料，並沿用到你下一次更新為止。記得先在上面記一次體重。
       </p>
 
       <label>性別</label>
@@ -340,10 +358,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=11"></script>
-<script src="products.js?v=11"></script>
-<script src="app.js?v=11"></script>
-<script src="sync.js?v=11"></script>
+<script src="firebase-config.js?v=12"></script>
+<script src="products.js?v=12"></script>
+<script src="app.js?v=12"></script>
+<script src="sync.js?v=12"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -746,6 +764,7 @@ freqSelect.addEventListener("change", () => {
 // 預設日期填今天，部位自動帶入建議輪替部位
 function prefillRecordForm() {
   document.getElementById("recDate").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("quickDate").value = new Date().toISOString().slice(0, 10);
   const suggestion = suggestNextSite(getRecords()); // e.g. "腹部-左"
   if (suggestion) {
     const [site, side] = suggestion.split("-");
@@ -760,6 +779,28 @@ function formatSite(site, side) {
   return side ? `${site}（${side}）` : site;
 }
 
+// 體重/體脂肪：獨立的快速記錄，適合每天量測
+document.getElementById("quickLogBtn").addEventListener("click", () => {
+  const date = document.getElementById("quickDate").value || new Date().toISOString().slice(0, 10);
+  const weight = parseFloat(document.getElementById("quickWeight").value) || null;
+  const bodyFat = parseFloat(document.getElementById("quickBodyFat").value) || null;
+
+  if (!weight && !bodyFat) {
+    alert("至少填體重或體脂肪其中一項");
+    return;
+  }
+
+  saveRecordEntry({ date, frequency: "", customDays: null, site: "", side: "", weight, bodyFat, note: "" });
+
+  document.getElementById("quickWeight").value = "";
+  document.getElementById("quickBodyFat").value = "";
+  document.getElementById("quickDate").value = new Date().toISOString().slice(0, 10);
+
+  renderRecords();
+  showToast(`已記錄 ${date} 的體重`);
+  maybeSync();
+});
+
 document.getElementById("saveRecordBtn").addEventListener("click", () => {
   const date = document.getElementById("recDate").value;
   if (!date) {
@@ -770,52 +811,53 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
   const customDays = parseInt(document.getElementById("recCustomDays").value) || null;
   const site = document.getElementById("recSite").value;
   const side = document.getElementById("recSide").value;
-  const weight = parseFloat(document.getElementById("recWeight").value) || null;
-  const bodyFat = parseFloat(document.getElementById("recBodyFat").value) || null;
   const note = document.getElementById("recNote").value.trim();
 
-  saveRecordEntry({ date, frequency, customDays, site, side, weight, bodyFat, note });
+  saveRecordEntry({ date, frequency, customDays, site, side, weight: null, bodyFat: null, note });
 
-  // 如果同時填了年齡/身高/活動量，就用這筆的體重直接重新算基本資料，
-  // 更新後的結果會沿用到下一次更新施打紀錄為止
+  // 如果同時填了年齡/身高/活動量，就用「最近一次記錄的體重」重新算基本資料，
+  // 更新後的結果會沿用到下一次更新為止
   const recAge = parseFloat(document.getElementById("recAge").value);
   const recHeight = parseFloat(document.getElementById("recHeight").value);
   const recActivity = document.getElementById("recActivity").value;
+  const latestWeight = getLatestWeight();
 
-  if (recAge && recHeight && recActivity && weight) {
-    const bmr = calcBMR({ gender, age: recAge, heightCm: recHeight, weightKg: weight });
-    const tdee = calcTDEE(bmr, recActivity);
-    const target = calcTargetCalories(bmr, tdee, deficitPct);
-    const protein = calcProteinTarget(weight);
-
-    profile = { bmr, tdee, target, protein, weightKg: weight, heightCm: recHeight };
-    localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
-
-    // 同步更新上方基本資料的顯示
-    document.getElementById("bmrVal").textContent = Math.round(bmr);
-    document.getElementById("tdeeVal").textContent = Math.round(tdee);
-    document.getElementById("targetVal").textContent = Math.round(target);
-    document.getElementById("proteinVal").textContent = Math.round(protein) + " g";
-    const banner = document.getElementById("statusBanner");
-    const tdeeTargetRaw = tdee * (1 - deficitPct);
-    if (tdeeTargetRaw < bmr) {
-      banner.className = "status-banner warn";
-      banner.textContent =
-        "這次的減量幅度會讓每日攝取低於基礎代謝率（BMR）。系統已自動把每日建議攝取量拉回 BMR，避免代謝率下降與肌肉流失。";
+  if (recAge && recHeight && recActivity) {
+    if (!latestWeight) {
+      alert("要更新基本資料需要先有一筆體重紀錄，請先在上面「體重與體脂肪」記一次體重。");
     } else {
-      banner.className = "status-banner ok";
-      banner.textContent = "目前的每日建議攝取量高於基礎代謝率，屬於安全範圍。";
-    }
-    toggleProfileDisplay();
-    renderDayPlan();
-    renderDailyLogSummary();
+      const bmr = calcBMR({ gender, age: recAge, heightCm: recHeight, weightKg: latestWeight });
+      const tdee = calcTDEE(bmr, recActivity);
+      const target = calcTargetCalories(bmr, tdee, deficitPct);
+      const protein = calcProteinTarget(latestWeight);
 
-    showToast("已用這次施打紀錄更新基本資料");
+      profile = { bmr, tdee, target, protein, weightKg: latestWeight, heightCm: recHeight };
+      localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
+
+      // 同步更新上方基本資料的顯示
+      document.getElementById("bmrVal").textContent = Math.round(bmr);
+      document.getElementById("tdeeVal").textContent = Math.round(tdee);
+      document.getElementById("targetVal").textContent = Math.round(target);
+      document.getElementById("proteinVal").textContent = Math.round(protein) + " g";
+      const banner = document.getElementById("statusBanner");
+      const tdeeTargetRaw = tdee * (1 - deficitPct);
+      if (tdeeTargetRaw < bmr) {
+        banner.className = "status-banner warn";
+        banner.textContent =
+          "這次的減量幅度會讓每日攝取低於基礎代謝率（BMR）。系統已自動把每日建議攝取量拉回 BMR，避免代謝率下降與肌肉流失。";
+      } else {
+        banner.className = "status-banner ok";
+        banner.textContent = "目前的每日建議攝取量高於基礎代謝率，屬於安全範圍。";
+      }
+      toggleProfileDisplay();
+      renderDayPlan();
+      renderDailyLogSummary();
+
+      showToast(`已用最近一次體重（${latestWeight} kg）更新基本資料`);
+    }
   }
 
   document.getElementById("recNote").value = "";
-  document.getElementById("recWeight").value = "";
-  document.getElementById("recBodyFat").value = "";
 
   renderRecords();
   prefillRecordForm();

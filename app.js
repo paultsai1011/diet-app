@@ -223,6 +223,13 @@ function calcTrend(records) {
   };
 }
 
+// 取得最近一次有記錄體重的數值（不管是體重快速紀錄還是施打紀錄裡附的），
+// 給「同時更新基本資料」重新計算 BMR 時使用
+function getLatestWeight() {
+  const withWeight = getRecords().filter((r) => r.weight); // getRecords() 已經是新到舊排序
+  return withWeight.length ? withWeight[0].weight : null;
+}
+
 // 匯出所有本機資料（紀錄 + 個人資料 + 自訂品項）成 JSON 檔，方便備份/換裝置
 function exportAllData() {
   const data = {
