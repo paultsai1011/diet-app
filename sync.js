@@ -47,6 +47,7 @@ async function pushToCloud() {
       records: JSON.parse(localStorage.getItem(LS_RECORDS) || "[]"),
       customItems: JSON.parse(localStorage.getItem(LS_CUSTOM_ITEMS) || "[]"),
       mealLog: JSON.parse(localStorage.getItem(LS_MEAL_LOG) || "[]"),
+      gender: localStorage.getItem(LS_GENDER) || "female",
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
     await userDocRef(currentUser.uid).set(data, { merge: true });
@@ -67,6 +68,7 @@ async function pullFromCloud() {
     localStorage.setItem(LS_RECORDS, JSON.stringify(data.records || []));
     localStorage.setItem(LS_CUSTOM_ITEMS, JSON.stringify(data.customItems || []));
     localStorage.setItem(LS_MEAL_LOG, JSON.stringify(data.mealLog || []));
+    if (data.gender) localStorage.setItem(LS_GENDER, data.gender);
   } else {
     // 雲端還沒有資料（第一次登入），把本機現有的資料當作初始值推上去
     await pushToCloud();

@@ -7,6 +7,7 @@ const LS_CUSTOM_ITEMS = "diet_custom_items_v1";
 const LS_STORE_PREF = "diet_store_pref_v1";
 const LS_RECORDS = "diet_records_v1"; // 施打 + 體重/體脂紀錄
 const LS_MEAL_LOG = "diet_meal_log_v1"; // 每日實際吃了什麼
+const LS_GENDER = "diet_gender_v1"; // 記住上次選的性別，避免重新整理後跳回預設值
 
 // 施打頻率換算成天數，方便算「下次施打日」
 const FREQUENCY_DAYS = {
@@ -227,6 +228,7 @@ function exportAllData() {
     records: JSON.parse(localStorage.getItem(LS_RECORDS) || "[]"),
     customItems: JSON.parse(localStorage.getItem(LS_CUSTOM_ITEMS) || "[]"),
     mealLog: JSON.parse(localStorage.getItem(LS_MEAL_LOG) || "[]"),
+    gender: localStorage.getItem(LS_GENDER) || "female",
     exportedAt: new Date().toISOString(),
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -245,6 +247,7 @@ function importAllData(jsonText) {
   if (data.records) localStorage.setItem(LS_RECORDS, JSON.stringify(data.records));
   if (data.customItems) localStorage.setItem(LS_CUSTOM_ITEMS, JSON.stringify(data.customItems));
   if (data.mealLog) localStorage.setItem(LS_MEAL_LOG, JSON.stringify(data.mealLog));
+  if (data.gender) localStorage.setItem(LS_GENDER, data.gender);
 }
 
 // ---------------------------------------------------------------------------

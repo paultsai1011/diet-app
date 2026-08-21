@@ -339,10 +339,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=9"></script>
-<script src="products.js?v=9"></script>
-<script src="app.js?v=9"></script>
-<script src="sync.js?v=9"></script>
+<script src="firebase-config.js?v=10"></script>
+<script src="products.js?v=10"></script>
+<script src="app.js?v=10"></script>
+<script src="sync.js?v=10"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -363,9 +363,16 @@ function wirePills(containerId, onChange) {
   });
 }
 
-let gender = "female";
+let gender = localStorage.getItem(LS_GENDER) || "female";
 let deficitPct = 0.15;
-wirePills("genderPills", (v) => (gender = v));
+wirePills("genderPills", (v) => {
+  gender = v;
+  localStorage.setItem(LS_GENDER, v);
+});
+// 頁面載入時，把性別按鈕的選中狀態對齊到記住的值（避免重整後畫面顯示「女」但變數其實是別的值的落差）
+document.querySelectorAll("#genderPills .pill").forEach((btn) => {
+  btn.classList.toggle("active", btn.dataset.value === gender);
+});
 wirePills("deficitPills", (v) => (deficitPct = parseFloat(v)));
 wirePills("storePills", (v) => {
   currentStore = v;
@@ -1009,6 +1016,11 @@ function refreshAppUI() {
     document.getElementById("proteinVal").textContent = Math.round(profile.protein) + " g";
   }
   toggleProfileDisplay();
+  // 雲端同步拉回資料後，性別選擇也要跟著對齊，避免顯示跟實際值不一致
+  gender = localStorage.getItem(LS_GENDER) || "female";
+  document.querySelectorAll("#genderPills .pill").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.value === gender);
+  });
   populateManualProductSelect();
   renderDayPlan();
   renderRecords();
