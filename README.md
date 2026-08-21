@@ -44,6 +44,13 @@ Generate new token（勾選 `repo` 權限即可），把產生的 token 當密�
 在陣列裡新增一筆物件，存檔後重新 `git add . && git commit -m "update" && git push` 即可，
 網站幾分鐘內就會更新，完全免費、不需要重新部署設定。
 
+## 關於瀏覽器快取
+`index.html` 裡引用 `app.js`、`products.js`、`sync.js` 時後面加了 `?v=2` 這種版本號，
+是為了避免瀏覽器把舊版本的檔案快取住、更新後看不到最新內容。
+**以後每次改了 `app.js`／`products.js`／`sync.js` 的內容，記得把 `index.html`
+裡對應的 `?v=2` 改成 `?v=3`、`?v=4`……（每次更新都 +1），
+這樣使用者（包括你自己）打開網站時瀏覽器才會抓到最新版，不用手動強制重新整理。
+
 也可以在網頁的「新增品項」區塊先臨時加品項試用（存在瀏覽器 localStorage），
 確定常吃再正式寫進 `products.js`。
 
