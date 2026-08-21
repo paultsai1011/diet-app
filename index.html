@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>超商飲控 · 便利店飲食計畫</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <div class="eyebrow">711 × 全家 · 飲食控制</div>
+    <h1>超商飲控</h1>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ 0. 雲端同步（選填） ============ -->
+  <section class="card" id="syncCard">
+    <h2><span class="num">☁</span> 跨裝置同步</h2>
+    <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
+      登入後，這台裝置的資料會跟雲端同步；換一台裝置用同一組帳號登入，資料會一起過去。
+      不登入也完全可以用，資料就只留在這台裝置。
+    </p>
+
+    <div id="syncLoginForm">
+      <div class="field-row">
+        <div>
+          <label for="syncEmail">Email</label>
+          <input type="email" id="syncEmail" placeholder="you@example.com">
+        </div>
+        <div>
+          <label for="syncPassword">密碼</label>
+          <input type="password" id="syncPassword" placeholder="至少 6 個字元">
+        </div>
+      </div>
+      <div class="field-row">
+        <button class="primary" id="syncLoginBtn" style="margin-top:0;">登入</button>
+        <button class="ghost" id="syncRegisterBtn">註冊新帳號</button>
+      </div>
+    </div>
+
+    <div id="syncLoggedIn" style="display:none;">
+      <div class="status-banner ok">
+        已登入：<span id="syncEmailLabel"></span> · <span id="syncStatus">已同步</span>
+      </div>
+      <button class="ghost" id="syncLogoutBtn" style="margin-top:10px;">登出</button>
+    </div>
+  </section>
+
+  <!-- ============ 1. 個人資料 / BMR 計算 ============ -->
+  <section class="card">
+    <h2><span class="num">01</span> 基本資料</h2>
+
+    <div class="pill-group" id="genderPills">
+      <button class="pill active" data-value="female">女</button>
+      <button class="pill" data-value="male">男</button>
+    </div>
+
+    <div class="field-row">
+      <div>
+        <label for="age">年齡</label>
+        <input type="number" id="age" placeholder="例如 32" min="15" max="90">
+      </div>
+      <div>
+        <label for="height">身高（cm）</label>
+        <input type="number" id="height" placeholder="例如 160" min="120" max="210">
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label for="weight">目前體重（kg）</label>
+        <input type="number" id="weight" placeholder="例如 65" min="30" max="200" step="0.1">
+      </div>
+      <div>
+        <label for="activity">活動量</label>
+        <select id="activity">
+          <option value="sedentary">久坐</option>
+          <option value="light">輕度活動</option>
+          <option value="moderate">中度活動</option>
+          <option value="active">高度活動</option>
+        </select>
+      </div>
+    </div>
+
+    <label style="margin-top:6px;">熱量目標（相對於每日消耗）</label>
+    <div class="pill-group" id="deficitPills">
+      <button class="pill" data-value="0">維持</button>
+      <button class="pill active" data-value="0.15">溫和減量 -15%</button>
+      <button class="pill" data-value="0.2">中度減量 -20%</button>
+    </div>
+
+    <button class="primary" id="calcBtn">計算</button>
+
+    <div id="resultBlock" style="display:none;">
+      <div class="stat-grid">
+        <div class="stat"><div class="v mono" id="bmrVal">--</div><div class="l">基礎代謝 BMR</div></div>
+        <div class="stat"><div class="v mono" id="tdeeVal">--</div><div class="l">每日消耗 TDEE</div></div>
+        <div class="stat"><div class="v mono" id="targetVal">--</div><div class="l">每日建議攝取</div></div>
+      </div>
+      <div class="stat-grid" style="margin-top:8px;">
+        <div class="stat" style="grid-column: span 3;">
+          <div class="v mono" id="proteinVal">--</div>
+          <div class="l">每日建議蛋白質（約 1.4g/kg，優先於三餐分配）</div>
+        </div>
+      </div>
+      <div class="status-banner" id="statusBanner"></div>
+    </div>
+  </section>
+
+  <!-- ============ 2. 今日餐點建議 ============ -->
+  <section class="card">
+    <h2><span class="num">02</span> 今日三餐建議</h2>
+
+    <div class="field-row">
+      <div>
+        <label for="logDate">記錄日期</label>
+        <input type="date" id="logDate">
+      </div>
+      <div>
+        <label>只顯示</label>
+        <div class="pill-group" id="storePills" style="margin-bottom:0;">
+          <button class="pill active" data-value="all">不限</button>
+          <button class="pill" data-value="711">7-11</button>
+          <button class="pill" data-value="family">全家</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dayPlan">
+      <div class="meal-block" data-meal="breakfast">
+        <div class="meal-block-header">
+          <span>🌅 早餐</span>
+          <button class="ghost small" data-shuffle="breakfast">🔀 換一組</button>
+        </div>
+        <div id="combo-breakfast"></div>
+      </div>
+      <div class="meal-block" data-meal="lunch">
+        <div class="meal-block-header">
+          <span>☀️ 午餐</span>
+          <button class="ghost small" data-shuffle="lunch">🔀 換一組</button>
+        </div>
+        <div id="combo-lunch"></div>
+      </div>
+      <div class="meal-block" data-meal="dinner">
+        <div class="meal-block-header">
+          <span>🌙 晚餐</span>
+          <button class="ghost small" data-shuffle="dinner">🔀 換一組</button>
+        </div>
+        <div id="combo-dinner"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
+      <label>手動記錄吃了什麼（不一定要照建議組合）</label>
+      <div class="field-row">
+        <div>
+          <label for="manualMealSelect">餐別</label>
+          <select id="manualMealSelect">
+            <option value="breakfast">早餐</option>
+            <option value="lunch">午餐</option>
+            <option value="dinner">晚餐</option>
+          </select>
+        </div>
+        <div>
+          <label for="manualProductSelect">品項</label>
+          <select id="manualProductSelect"></select>
+        </div>
+      </div>
+      <button class="ghost" id="manualLogBtn">＋ 加入今日紀錄</button>
+    </div>
+
+    <div id="dailyLogSummary" style="margin-top:16px;"></div>
+  </section>
+
+  <!-- ============ 3. 新增自訂品項 ============ -->
+  <section class="card">
+    <h2><span class="num">03</span> 新增品項</h2>
+    <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
+      這一區存在你手機瀏覽器裡（不需要後端、不會花錢）。看到新品先加在這裡試用；
+      確定常吃的話，之後可以直接把它寫進 <code class="mono">products.js</code> 讓所有裝置都看得到，並上傳到 GitHub。
+    </p>
+
+    <div class="field-row">
+      <div>
+        <label for="newName">品名</label>
+        <input type="text" id="newName" placeholder="例如：鹽麴雞胸">
+      </div>
+      <div>
+        <label for="newStore">店家</label>
+        <select id="newStore">
+          <option value="711">7-ELEVEN</option>
+          <option value="family">全家</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label for="newCategory">類別</label>
+        <select id="newCategory">
+          <option value="protein">蛋白質</option>
+          <option value="carb">主食</option>
+          <option value="veg">蔬菜/沙拉</option>
+          <option value="soup">湯品</option>
+          <option value="dairy">乳製品</option>
+          <option value="drink">飲品</option>
+        </select>
+      </div>
+      <div>
+        <label for="newKcal">熱量（kcal）</label>
+        <input type="number" id="newKcal" placeholder="180">
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label for="newProtein">蛋白質（g）</label>
+        <input type="number" id="newProtein" placeholder="20">
+      </div>
+      <div>
+        <label for="newCarbs">碳水（g）</label>
+        <input type="number" id="newCarbs" placeholder="10">
+      </div>
+    </div>
+    <button class="primary" id="addItemBtn">新增到我的品項</button>
+  </section>
+
+  <!-- ============ 4. 施打與身體紀錄 ============ -->
+  <section class="card">
+    <h2><span class="num">04</span> 施打與身體紀錄</h2>
+    <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
+      資料只存在這台裝置的瀏覽器裡，不會上傳到任何伺服器。這不是醫療建議，
+      實際施打頻率、部位請以醫師/藥師指示為準，這裡只是幫你記錄、提醒輪替部位跟算日期。
+    </p>
+
+    <div class="field-row">
+      <div>
+        <label for="recDate">日期</label>
+        <input type="date" id="recDate">
+      </div>
+      <div>
+        <label for="recFrequency">施打頻率</label>
+        <select id="recFrequency">
+          <option value="weekly">每週一次</option>
+          <option value="biweekly">每兩週一次</option>
+          <option value="custom">自訂天數</option>
+          <option value="">（這筆非施打，僅記錄體重）</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row" id="customDaysRow" style="display:none;">
+      <div>
+        <label for="recCustomDays">自訂間隔（天）</label>
+        <input type="number" id="recCustomDays" placeholder="例如 10">
+      </div>
+      <div></div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label for="recSite">施打部位</label>
+        <select id="recSite">
+          <option value="">不記錄</option>
+          <option value="腹部">腹部</option>
+          <option value="大腿">大腿</option>
+          <option value="上臂">上臂</option>
+          <option value="臀部">臀部</option>
+        </select>
+      </div>
+      <div>
+        <label for="recSide">左右側</label>
+        <select id="recSide">
+          <option value="">不記錄</option>
+          <option value="左">左</option>
+          <option value="右">右</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label for="recWeight">體重（kg）</label>
+        <input type="number" id="recWeight" step="0.1" placeholder="例如 64.5">
+      </div>
+      <div>
+        <label for="recBodyFat">體脂肪（%）</label>
+        <input type="number" id="recBodyFat" step="0.1" placeholder="例如 28.5">
+      </div>
+    </div>
+    <div class="field-row">
+      <div style="grid-column: span 2;">
+        <label for="recNote">備註</label>
+        <input type="text" id="recNote" placeholder="選填">
+      </div>
+    </div>
+
+    <button class="primary" id="saveRecordBtn">新增紀錄</button>
+
+    <div id="nextInjectionInfo" class="status-banner" style="display:none;margin-top:12px;"></div>
+    <div id="trendInfo" class="status-banner ok" style="display:none;margin-top:10px;"></div>
+
+    <div id="recordList" style="margin-top:14px;"></div>
+
+    <div class="field-row" style="margin-top:14px;">
+      <button class="ghost" id="exportBtn">⬇ 匯出備份 (JSON)</button>
+      <label class="ghost" style="text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        ⬆ 匯入備份
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </label>
+    </div>
+  </section>
+
+</main>
+
+<footer>超商飲控 · 純前端運算，資料只留在你的裝置上 · 營養數值為估計值，請以包裝標示為準</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="products.js"></script>
+<script src="app.js"></script>
+<script src="sync.js"></script>
+<script>
+/* ---------------------------------------------------------------------
+   UI wiring
+--------------------------------------------------------------------- */
+let profile = null;
+let currentStore = "all";
+const MEAL_TYPES = ["breakfast", "lunch", "dinner"];
+const dayPlan = { breakfast: null, lunch: null, dinner: null }; // 目前顯示中的組合
+
+function wirePills(containerId, onChange) {
+  const el = document.getElementById(containerId);
+  el.querySelectorAll(".pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      el.querySelectorAll(".pill").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      onChange(btn.dataset.value);
+    });
+  });
+}
+
+let gender = "female";
+let deficitPct = 0.15;
+wirePills("genderPills", (v) => (gender = v));
+wirePills("deficitPills", (v) => (deficitPct = parseFloat(v)));
+wirePills("storePills", (v) => {
+  currentStore = v;
+  renderDayPlan();
+});
+
+document.querySelectorAll("[data-shuffle]").forEach((btn) => {
+  btn.addEventListener("click", () => renderMealBlock(btn.dataset.shuffle));
+});
+
+document.getElementById("calcBtn").addEventListener("click", () => {
+  const age = parseFloat(document.getElementById("age").value);
+  const heightCm = parseFloat(document.getElementById("height").value);
+  const weightKg = parseFloat(document.getElementById("weight").value);
+  const activity = document.getElementById("activity").value;
+
+  if (!age || !heightCm || !weightKg) {
+    alert("請完整輸入年齡、身高、體重");
+    return;
+  }
+
+  const bmr = calcBMR({ gender, age, heightCm, weightKg });
+  const tdee = calcTDEE(bmr, activity);
+  const target = calcTargetCalories(bmr, tdee, deficitPct);
+  const protein = calcProteinTarget(weightKg);
+
+  profile = { bmr, tdee, target, protein, weightKg };
+  localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
+  maybeSync();
+
+  document.getElementById("bmrVal").textContent = Math.round(bmr);
+  document.getElementById("tdeeVal").textContent = Math.round(tdee);
+  document.getElementById("targetVal").textContent = Math.round(target);
+  document.getElementById("proteinVal").textContent = Math.round(protein) + " g";
+
+  const banner = document.getElementById("statusBanner");
+  const tdeeTargetRaw = tdee * (1 - deficitPct);
+  if (tdeeTargetRaw < bmr) {
+    banner.className = "status-banner warn";
+    banner.textContent =
+      "你設定的減量幅度會讓每日攝取低於基礎代謝率（BMR）。系統已自動把每日建議攝取量拉回 BMR，避免代謝率下降與肌肉流失 —— 尤其打針後食慾較差，更要顧到這條底線。";
+  } else {
+    banner.className = "status-banner ok";
+    banner.textContent = "目前的每日建議攝取量高於基礎代謝率，屬於安全範圍。";
+  }
+
+  document.getElementById("resultBlock").style.display = "block";
+  renderDayPlan();
+});
+
+function loadProfile() {
+  const saved = localStorage.getItem(LS_PROFILE);
+  if (saved) {
+    profile = JSON.parse(saved);
+  }
+}
+
+// 一次產生早/午/晚三個區塊
+function renderDayPlan() {
+  MEAL_TYPES.forEach((mealType) => renderMealBlock(mealType));
+}
+
+// 產生（或換一組）單一餐別的建議卡片
+function renderMealBlock(mealType) {
+  const container = document.getElementById("combo-" + mealType);
+
+  if (!profile) {
+    container.innerHTML = '<div class="empty-note">先在上方輸入基本資料並按「計算」，才能算出符合你代謝率的三餐建議。</div>';
+    return;
+  }
+
+  const mealCalorieTarget = profile.target / 3;
+  const mealProteinTarget = profile.protein / 3;
+
+  // 抓一批候選組合，排除目前正顯示的那組，讓「換一組」真的會換
+  const pool = recommendCombos(mealType, currentStore, mealCalorieTarget, mealProteinTarget, 6);
+  const currentKey = dayPlan[mealType] ? dayPlan[mealType].items.map((i) => i.id).sort().join("|") : null;
+  const next = pool.find((c) => c.items.map((i) => i.id).sort().join("|") !== currentKey) || pool[0];
+
+  if (!next) {
+    container.innerHTML = '<div class="empty-note">目前篩選條件下找不到合適組合，試試切換「不限」店家，或到下方新增品項。</div>';
+    dayPlan[mealType] = null;
+    return;
+  }
+
+  dayPlan[mealType] = next;
+
+  const div = document.createElement("div");
+  div.className = "combo-card tappable";
+  const itemsHtml = next.items
+    .map(
+      (i) => `<div class="combo-item">
+        <span>${i.name}<span class="store-tag">${STORE_LABELS[i.store]}</span></span>
+        <span class="kcal">${i.kcal} kcal</span>
+      </div>`
+    )
+    .join("");
+  div.innerHTML = `
+    <div class="items">${itemsHtml}</div>
+    <div class="combo-total">
+      <span>合計 ${next.kcal} kcal</span>
+      <span>蛋白質 ${next.protein} g</span>
+    </div>
+    <div class="combo-tap-hint">點這裡直接記錄${MEAL_LABELS[mealType]}</div>
+  `;
+  div.addEventListener("click", () => logCombo(next, div, mealType));
+
+  container.innerHTML = "";
+  container.appendChild(div);
+}
+
+function showToast(msg) {
+  let toast = document.getElementById("appToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "appToast";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove("show"), 1800);
+}
+
+function logCombo(combo, cardEl, mealType) {
+  const date = document.getElementById("logDate").value || new Date().toISOString().slice(0, 10);
+  saveMealLogEntry({
+    date,
+    meal: mealType,
+    mealOrder: MEAL_ORDER[mealType],
+    items: combo.items.map((i) => ({ name: i.name, kcal: i.kcal, protein: i.protein })),
+    kcalTotal: combo.kcal,
+    proteinTotal: combo.protein,
+  });
+  renderDailyLogSummary();
+  showToast(`已記錄 ${date}・${MEAL_LABELS[mealType]}`);
+  maybeSync();
+  if (cardEl) {
+    cardEl.classList.add("logged");
+    const hint = cardEl.querySelector(".combo-tap-hint");
+    if (hint) hint.textContent = "✓ 已記錄，再點一次可再加一份";
+    setTimeout(() => {
+      cardEl.classList.remove("logged");
+      if (hint) hint.textContent = "點這裡直接記錄" + MEAL_LABELS[mealType];
+    }, 1500);
+  }
+}
+
+function populateManualProductSelect() {
+  const select = document.getElementById("manualProductSelect");
+  const all = getAllProducts();
+  select.innerHTML = all
+    .map((p) => `<option value="${p.id}">${p.name}（${STORE_LABELS[p.store]} · ${p.kcal} kcal）</option>`)
+    .join("");
+}
+
+document.getElementById("manualLogBtn").addEventListener("click", () => {
+  const select = document.getElementById("manualProductSelect");
+  const mealType = document.getElementById("manualMealSelect").value;
+  const product = getAllProducts().find((p) => p.id === select.value);
+  if (!product) return;
+  const date = document.getElementById("logDate").value || new Date().toISOString().slice(0, 10);
+  saveMealLogEntry({
+    date,
+    meal: mealType,
+    mealOrder: MEAL_ORDER[mealType],
+    items: [{ name: product.name, kcal: product.kcal, protein: product.protein }],
+    kcalTotal: product.kcal,
+    proteinTotal: product.protein,
+  });
+  renderDailyLogSummary();
+  showToast(`已記錄 ${date}・${MEAL_LABELS[mealType]}`);
+  maybeSync();
+});
+
+function renderDailyLogSummary() {
+  const date = document.getElementById("logDate").value || new Date().toISOString().slice(0, 10);
+  const logs = getMealLogsForDate(date);
+  const el = document.getElementById("dailyLogSummary");
+
+  if (logs.length === 0) {
+    el.innerHTML = `<div class="empty-note">${date} 還沒有記錄任何一餐。</div>`;
+    return;
+  }
+
+  const totalKcal = logs.reduce((s, l) => s + l.kcalTotal, 0);
+  const totalProtein = logs.reduce((s, l) => s + l.proteinTotal, 0);
+
+  let statusHtml = "";
+  if (profile) {
+    const isLow = totalKcal < profile.bmr;
+    statusHtml = `<div class="status-banner ${isLow ? "warn" : "ok"}" style="margin-bottom:10px;">
+      ${date} 目前累積 ${Math.round(totalKcal)} kcal / 目標 ${Math.round(profile.target)} kcal
+      ${isLow ? "（已低於你的基礎代謝率 BMR，留意是否吃太少）" : ""}
+    </div>`;
+  }
+
+  const rows = logs
+    .map(
+      (l) => `<div class="combo-card">
+        <div class="combo-item"><span><strong>${MEAL_LABELS[l.meal]}</strong> ${l.items.map((i) => i.name).join("、")}</span></div>
+        <div class="combo-total"><span>${l.kcalTotal} kcal</span><span>蛋白質 ${l.proteinTotal} g</span></div>
+        <button class="ghost" style="margin-top:8px;padding:6px;font-size:12px;" onclick="handleDeleteMealLog('${l.id}')">刪除</button>
+      </div>`
+    )
+    .join("");
+
+  el.innerHTML = `
+    <label>${date} 紀錄（合計 ${Math.round(totalKcal)} kcal · 蛋白質 ${Math.round(totalProtein)} g）</label>
+    ${statusHtml}
+    ${rows}
+  `;
+}
+
+function handleDeleteMealLog(id) {
+  deleteMealLogEntry(id);
+  renderDailyLogSummary();
+  maybeSync();
+}
+
+document.getElementById("logDate").addEventListener("change", renderDailyLogSummary);
+
+document.getElementById("addItemBtn").addEventListener("click", () => {
+  const name = document.getElementById("newName").value.trim();
+  const store = document.getElementById("newStore").value;
+  const category = document.getElementById("newCategory").value;
+  const kcal = parseFloat(document.getElementById("newKcal").value);
+  const protein = parseFloat(document.getElementById("newProtein").value) || 0;
+  const carbs = parseFloat(document.getElementById("newCarbs").value) || 0;
+
+  if (!name || !kcal) {
+    alert("至少要填品名和熱量");
+    return;
+  }
+
+  saveCustomItem({
+    id: "custom_" + Date.now(),
+    name,
+    store,
+    category,
+    meals: ["breakfast", "lunch", "dinner"],
+    kcal,
+    protein,
+    carbs,
+    fat: 0,
+  });
+
+  document.getElementById("newName").value = "";
+  document.getElementById("newKcal").value = "";
+  document.getElementById("newProtein").value = "";
+  document.getElementById("newCarbs").value = "";
+  populateManualProductSelect();
+  renderDayPlan();
+  maybeSync();
+  alert(name + " 已加入，現在的三餐建議會開始考慮這個品項。");
+});
+
+loadProfile();
+if (profile) {
+  document.getElementById("bmrVal").textContent = Math.round(profile.bmr);
+  document.getElementById("tdeeVal").textContent = Math.round(profile.tdee);
+  document.getElementById("targetVal").textContent = Math.round(profile.target);
+  document.getElementById("proteinVal").textContent = Math.round(profile.protein) + " g";
+  document.getElementById("resultBlock").style.display = "block";
+}
+document.getElementById("logDate").value = new Date().toISOString().slice(0, 10);
+populateManualProductSelect();
+renderDayPlan();
+renderDailyLogSummary();
+
+/* ---------------------------------------------------------------------
+   4. 施打與身體紀錄
+--------------------------------------------------------------------- */
+const freqSelect = document.getElementById("recFrequency");
+const customDaysRow = document.getElementById("customDaysRow");
+freqSelect.addEventListener("change", () => {
+  customDaysRow.style.display = freqSelect.value === "custom" ? "grid" : "none";
+});
+
+// 預設日期填今天，部位自動帶入建議輪替部位
+function prefillRecordForm() {
+  document.getElementById("recDate").value = new Date().toISOString().slice(0, 10);
+  const suggestion = suggestNextSite(getRecords()); // e.g. "腹部-左"
+  if (suggestion) {
+    const [site, side] = suggestion.split("-");
+    document.getElementById("recSite").value = site || "";
+    document.getElementById("recSide").value = side || "";
+  }
+}
+prefillRecordForm();
+
+function formatSite(site, side) {
+  if (!site) return "";
+  return side ? `${site}（${side}）` : site;
+}
+
+document.getElementById("saveRecordBtn").addEventListener("click", () => {
+  const date = document.getElementById("recDate").value;
+  if (!date) {
+    alert("請選擇日期");
+    return;
+  }
+  const frequency = freqSelect.value;
+  const customDays = parseInt(document.getElementById("recCustomDays").value) || null;
+  const site = document.getElementById("recSite").value;
+  const side = document.getElementById("recSide").value;
+  const weight = parseFloat(document.getElementById("recWeight").value) || null;
+  const bodyFat = parseFloat(document.getElementById("recBodyFat").value) || null;
+  const note = document.getElementById("recNote").value.trim();
+
+  saveRecordEntry({ date, frequency, customDays, site, side, weight, bodyFat, note });
+
+  document.getElementById("recNote").value = "";
+  document.getElementById("recWeight").value = "";
+  document.getElementById("recBodyFat").value = "";
+
+  renderRecords();
+  prefillRecordForm();
+  maybeSync();
+});
+
+function renderRecords() {
+  const records = getRecords();
+  const list = document.getElementById("recordList");
+  const nextBanner = document.getElementById("nextInjectionInfo");
+  const trendBanner = document.getElementById("trendInfo");
+
+  // 下次施打日提示：抓最近一筆有填頻率的紀錄
+  const lastInjection = records.find((r) => r.frequency);
+  if (lastInjection) {
+    const nextDate = calcNextInjectionDate(lastInjection.date, lastInjection.frequency, lastInjection.customDays);
+    if (nextDate) {
+      const today = new Date();
+      const diffDays = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
+      nextBanner.style.display = "block";
+      nextBanner.className = diffDays < 0 ? "status-banner warn" : "status-banner ok";
+      const dateStr = nextDate.toISOString().slice(0, 10);
+      nextBanner.textContent =
+        diffDays < 0
+          ? `下次施打建議日期 ${dateStr} 已經過了 ${Math.abs(diffDays)} 天，記得確認一下排程。`
+          : diffDays === 0
+          ? `下次施打建議日期就是今天（${dateStr}）。`
+          : `下次施打建議日期：${dateStr}（${diffDays} 天後），建議部位：${formatSite(...suggestNextSite(records).split("-"))}。`;
+    } else {
+      nextBanner.style.display = "none";
+    }
+  } else {
+    nextBanner.style.display = "none";
+  }
+
+  // 趨勢
+  const trend = calcTrend(records);
+  if (trend) {
+    trendBanner.style.display = "block";
+    const wSign = trend.weightChange > 0 ? "+" : "";
+    let text = `${trend.fromDate} → ${trend.toDate}：體重 ${wSign}${trend.weightChange} kg`;
+    if (trend.bodyFatChange !== null) {
+      const fSign = trend.bodyFatChange > 0 ? "+" : "";
+      text += `，體脂 ${fSign}${trend.bodyFatChange}%`;
+    }
+    trendBanner.className = trend.weightChange <= 0 ? "status-banner ok" : "status-banner warn";
+    trendBanner.textContent = text;
+  } else {
+    trendBanner.style.display = "none";
+  }
+
+  // 列表
+  if (records.length === 0) {
+    list.innerHTML = '<div class="empty-note">還沒有紀錄，新增第一筆吧。</div>';
+    return;
+  }
+
+  list.innerHTML = records
+    .map((r) => {
+      const freqLabel =
+        r.frequency === "weekly" ? "每週一次" : r.frequency === "biweekly" ? "每兩週一次" : r.frequency === "custom" ? `每 ${r.customDays} 天` : "";
+      const parts = [];
+      if (freqLabel) parts.push(freqLabel);
+      if (r.site) parts.push("部位：" + formatSite(r.site, r.side));
+      if (r.weight) parts.push(r.weight + " kg");
+      if (r.bodyFat) parts.push(r.bodyFat + " %");
+      return `
+        <div class="combo-card">
+          <div class="combo-item">
+            <span><strong>${r.date}</strong> ${parts.join(" · ")}</span>
+          </div>
+          ${r.note ? `<div style="font-size:12px;color:var(--text-mid);margin-top:4px;">${r.note}</div>` : ""}
+          <button class="ghost" style="margin-top:8px;padding:6px;font-size:12px;" onclick="handleDeleteRecord('${r.id}')">刪除</button>
+        </div>`;
+    })
+    .join("");
+}
+
+function handleDeleteRecord(id) {
+  deleteRecordEntry(id);
+  renderRecords();
+  prefillRecordForm();
+  maybeSync();
+}
+
+document.getElementById("exportBtn").addEventListener("click", exportAllData);
+
+document.getElementById("importFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      importAllData(reader.result);
+      maybeSync();
+      alert("匯入完成");
+      location.reload();
+    } catch (err) {
+      alert("檔案格式不正確");
+    }
+  };
+  reader.readAsText(file);
+});
+
+renderRecords();
+if (typeof initSyncUI === "function") initSyncUI();
+</script>
+
+</body>
+</html>
