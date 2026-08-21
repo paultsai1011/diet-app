@@ -50,134 +50,9 @@
     </div>
   </section>
 
-  <!-- ============ 1. 今日餐點建議 ============ -->
+  <!-- ============ 1. 施打與身體紀錄 ============ -->
   <section class="card">
-    <h2><span class="num">01</span> 今日三餐建議</h2>
-
-    <div id="targetInfoBanner"></div>
-
-    <div class="field-row">
-      <div>
-        <label for="logDate">記錄日期</label>
-        <input type="date" id="logDate">
-      </div>
-      <div>
-        <label>只顯示</label>
-        <div class="pill-group" id="storePills" style="margin-bottom:0;">
-          <button class="pill active" data-value="all">不限</button>
-          <button class="pill" data-value="711">7-11</button>
-          <button class="pill" data-value="family">全家</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="dayPlanSummary"></div>
-
-    <div id="dayPlan">
-      <div class="meal-block" data-meal="breakfast">
-        <div class="meal-block-header">
-          <span>🌅 早餐</span>
-          <button class="ghost small" data-shuffle="breakfast">🔀 換一組</button>
-        </div>
-        <div id="combo-breakfast"></div>
-      </div>
-      <div class="meal-block" data-meal="lunch">
-        <div class="meal-block-header">
-          <span>☀️ 午餐</span>
-          <button class="ghost small" data-shuffle="lunch">🔀 換一組</button>
-        </div>
-        <div id="combo-lunch"></div>
-      </div>
-      <div class="meal-block" data-meal="dinner">
-        <div class="meal-block-header">
-          <span>🌙 晚餐</span>
-          <button class="ghost small" data-shuffle="dinner">🔀 換一組</button>
-        </div>
-        <div id="combo-dinner"></div>
-      </div>
-    </div>
-
-    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
-      <label>手動記錄吃了什麼（不一定要照建議組合）</label>
-      <div class="field-row">
-        <div>
-          <label for="manualMealSelect">餐別</label>
-          <select id="manualMealSelect">
-            <option value="breakfast">早餐</option>
-            <option value="lunch">午餐</option>
-            <option value="dinner">晚餐</option>
-          </select>
-        </div>
-        <div>
-          <label for="manualProductSelect">品項</label>
-          <select id="manualProductSelect"></select>
-        </div>
-      </div>
-      <button class="ghost" id="manualLogBtn">＋ 加入今日紀錄</button>
-    </div>
-
-    <div id="dailyLogSummary" style="margin-top:16px;"></div>
-
-    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
-      <label>歷史紀錄</label>
-      <div id="logHistory"></div>
-    </div>
-  </section>
-
-  <!-- ============ 2. 新增自訂品項 ============ -->
-  <section class="card">
-    <h2><span class="num">02</span> 新增品項</h2>
-    <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
-      這一區存在你手機瀏覽器裡（不需要後端、不會花錢）。看到新品先加在這裡試用；
-      確定常吃的話，之後可以直接把它寫進 <code class="mono">products.js</code> 讓所有裝置都看得到，並上傳到 GitHub。
-    </p>
-
-    <div class="field-row">
-      <div>
-        <label for="newName">品名</label>
-        <input type="text" id="newName" placeholder="例如：鹽麴雞胸">
-      </div>
-      <div>
-        <label for="newStore">店家</label>
-        <select id="newStore">
-          <option value="711">7-ELEVEN</option>
-          <option value="family">全家</option>
-        </select>
-      </div>
-    </div>
-    <div class="field-row">
-      <div>
-        <label for="newCategory">類別</label>
-        <select id="newCategory">
-          <option value="protein">蛋白質</option>
-          <option value="carb">主食</option>
-          <option value="veg">蔬菜/沙拉</option>
-          <option value="soup">湯品</option>
-          <option value="dairy">乳製品</option>
-          <option value="drink">飲品</option>
-        </select>
-      </div>
-      <div>
-        <label for="newKcal">熱量（kcal）</label>
-        <input type="number" id="newKcal" placeholder="180">
-      </div>
-    </div>
-    <div class="field-row">
-      <div>
-        <label for="newProtein">蛋白質（g）</label>
-        <input type="number" id="newProtein" placeholder="20">
-      </div>
-      <div>
-        <label for="newCarbs">碳水（g）</label>
-        <input type="number" id="newCarbs" placeholder="10">
-      </div>
-    </div>
-    <button class="primary" id="addItemBtn">新增到我的品項</button>
-  </section>
-
-  <!-- ============ 3. 施打與身體紀錄 ============ -->
-  <section class="card">
-    <h2><span class="num">03</span> 施打與身體紀錄</h2>
+    <h2><span class="num">01</span> 施打與身體紀錄</h2>
     <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
       資料只存在這台裝置的瀏覽器裡，不會上傳到任何伺服器。這不是醫療建議，
       實際施打頻率、部位請以醫師/藥師指示為準，這裡只是幫你記錄、提醒輪替部位跟算日期。
@@ -312,7 +187,15 @@
     <div id="nextInjectionInfo" class="status-banner" style="display:none;margin-top:12px;"></div>
     <div id="trendInfo" class="status-banner ok" style="display:none;margin-top:10px;"></div>
 
-    <div id="recordList" style="margin-top:14px;"></div>
+    <div style="margin-top:16px;">
+      <label>身體數據趨勢（體重・體脂肪・BMI）</label>
+      <div id="weightChart" style="margin-top:8px;"></div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <label>歷史紀錄</label>
+      <div id="recordList" style="margin-top:8px;"></div>
+    </div>
 
     <div class="field-row" style="margin-top:14px;">
       <button class="ghost" id="exportBtn">⬇ 匯出備份 (JSON)</button>
@@ -323,6 +206,132 @@
     </div>
   </section>
 
+  <!-- ============ 2. 今日餐點建議 ============ -->
+  <section class="card">
+    <h2><span class="num">02</span> 今日三餐建議</h2>
+
+    <div id="targetInfoBanner"></div>
+
+    <div class="field-row">
+      <div>
+        <label for="logDate">記錄日期</label>
+        <input type="date" id="logDate">
+      </div>
+      <div>
+        <label>只顯示</label>
+        <div class="pill-group" id="storePills" style="margin-bottom:0;">
+          <button class="pill active" data-value="all">不限</button>
+          <button class="pill" data-value="711">7-11</button>
+          <button class="pill" data-value="family">全家</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dayPlanSummary"></div>
+
+    <div id="dayPlan">
+      <div class="meal-block" data-meal="breakfast">
+        <div class="meal-block-header">
+          <span>🌅 早餐</span>
+          <button class="ghost small" data-shuffle="breakfast">🔀 換一組</button>
+        </div>
+        <div id="combo-breakfast"></div>
+      </div>
+      <div class="meal-block" data-meal="lunch">
+        <div class="meal-block-header">
+          <span>☀️ 午餐</span>
+          <button class="ghost small" data-shuffle="lunch">🔀 換一組</button>
+        </div>
+        <div id="combo-lunch"></div>
+      </div>
+      <div class="meal-block" data-meal="dinner">
+        <div class="meal-block-header">
+          <span>🌙 晚餐</span>
+          <button class="ghost small" data-shuffle="dinner">🔀 換一組</button>
+        </div>
+        <div id="combo-dinner"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
+      <label>手動記錄吃了什麼（不一定要照建議組合）</label>
+      <div class="field-row">
+        <div>
+          <label for="manualMealSelect">餐別</label>
+          <select id="manualMealSelect">
+            <option value="breakfast">早餐</option>
+            <option value="lunch">午餐</option>
+            <option value="dinner">晚餐</option>
+          </select>
+        </div>
+        <div>
+          <label for="manualProductSelect">品項</label>
+          <select id="manualProductSelect"></select>
+        </div>
+      </div>
+      <button class="ghost" id="manualLogBtn">＋ 加入今日紀錄</button>
+    </div>
+
+    <div id="dailyLogSummary" style="margin-top:16px;"></div>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
+      <label>歷史紀錄</label>
+      <div id="logHistory"></div>
+    </div>
+  </section>
+
+  <!-- ============ 3. 新增自訂品項 ============ -->
+  <section class="card">
+    <h2><span class="num">03</span> 新增品項</h2>
+    <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
+      這一區存在你手機瀏覽器裡（不需要後端、不會花錢）。看到新品先加在這裡試用；
+      確定常吃的話，之後可以直接把它寫進 <code class="mono">products.js</code> 讓所有裝置都看得到，並上傳到 GitHub。
+    </p>
+
+    <div class="field-row">
+      <div>
+        <label for="newName">品名</label>
+        <input type="text" id="newName" placeholder="例如：鹽麴雞胸">
+      </div>
+      <div>
+        <label for="newStore">店家</label>
+        <select id="newStore">
+          <option value="711">7-ELEVEN</option>
+          <option value="family">全家</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label for="newCategory">類別</label>
+        <select id="newCategory">
+          <option value="protein">蛋白質</option>
+          <option value="carb">主食</option>
+          <option value="veg">蔬菜/沙拉</option>
+          <option value="soup">湯品</option>
+          <option value="dairy">乳製品</option>
+          <option value="drink">飲品</option>
+        </select>
+      </div>
+      <div>
+        <label for="newKcal">熱量（kcal）</label>
+        <input type="number" id="newKcal" placeholder="180">
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label for="newProtein">蛋白質（g）</label>
+        <input type="number" id="newProtein" placeholder="20">
+      </div>
+      <div>
+        <label for="newCarbs">碳水（g）</label>
+        <input type="number" id="newCarbs" placeholder="10">
+      </div>
+    </div>
+    <button class="primary" id="addItemBtn">新增到我的品項</button>
+  </section>
+
+
 </main>
 
 <footer>超商飲控 · 純前端運算，資料只留在你的裝置上 · 營養數值為估計值，請以包裝標示為準</footer>
@@ -330,10 +339,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=6"></script>
-<script src="products.js?v=6"></script>
-<script src="app.js?v=6"></script>
-<script src="sync.js?v=6"></script>
+<script src="firebase-config.js?v=8"></script>
+<script src="products.js?v=8"></script>
+<script src="app.js?v=8"></script>
+<script src="sync.js?v=8"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -751,7 +760,7 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
     const target = calcTargetCalories(bmr, tdee, deficitPct);
     const protein = calcProteinTarget(weight);
 
-    profile = { bmr, tdee, target, protein, weightKg: weight };
+    profile = { bmr, tdee, target, protein, weightKg: weight, heightCm: recHeight };
     localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
 
     // 同步更新上方基本資料的顯示
@@ -833,28 +842,134 @@ function renderRecords() {
   // 列表
   if (records.length === 0) {
     list.innerHTML = '<div class="empty-note">還沒有紀錄，新增第一筆吧。</div>';
+    renderWeightChart(records);
     return;
   }
 
   list.innerHTML = records
     .map((r) => {
       const freqLabel =
-        r.frequency === "weekly" ? "每週一次" : r.frequency === "biweekly" ? "每兩週一次" : r.frequency === "custom" ? `每 ${r.customDays} 天` : "";
-      const parts = [];
-      if (freqLabel) parts.push(freqLabel);
-      if (r.site) parts.push("部位：" + formatSite(r.site, r.side));
-      if (r.weight) parts.push(r.weight + " kg");
-      if (r.bodyFat) parts.push(r.bodyFat + " %");
+        r.frequency === "weekly" ? "每週一次" : r.frequency === "biweekly" ? "每兩週一次" : r.frequency === "custom" ? `每 ${r.customDays} 天` : "—";
+      const siteLabel = r.site ? formatSite(r.site, r.side) : "—";
+      const weightLabel = r.weight ? r.weight + " kg" : "—";
+      const bodyFatLabel = r.bodyFat ? r.bodyFat + " %" : "—";
       return `
-        <div class="combo-card">
-          <div class="combo-item">
-            <span><strong>${r.date}</strong> ${parts.join(" · ")}</span>
+        <div class="record-card">
+          <div class="record-card-header">
+            <strong>${r.date}</strong>
+            <button class="icon-btn" title="刪除" onclick="handleDeleteRecord('${r.id}')">✕</button>
           </div>
-          ${r.note ? `<div style="font-size:12px;color:var(--text-mid);margin-top:4px;">${r.note}</div>` : ""}
-          <button class="ghost" style="margin-top:8px;padding:6px;font-size:12px;" onclick="handleDeleteRecord('${r.id}')">刪除</button>
+          <div class="record-card-grid">
+            <div class="rc-field"><span class="rc-label">頻率</span><span class="rc-value">${freqLabel}</span></div>
+            <div class="rc-field"><span class="rc-label">部位</span><span class="rc-value">${siteLabel}</span></div>
+            <div class="rc-field"><span class="rc-label">體重</span><span class="rc-value">${weightLabel}</span></div>
+            <div class="rc-field"><span class="rc-label">體脂</span><span class="rc-value">${bodyFatLabel}</span></div>
+          </div>
+          ${r.note ? `<div class="record-card-note">${r.note}</div>` : ""}
         </div>`;
     })
     .join("");
+
+  renderWeightChart(records);
+}
+
+// 用純 SVG 畫一條體重趨勢線，不需要額外套件
+// 用純 SVG 疊圖：體重、體脂肪、BMI 三條線畫在同一張圖，
+// 各自用自己的最大/最小值換算高度（避免體重 60 跟體脂 20 疊在一起看不出趨勢）
+function renderWeightChart(records) {
+  const container = document.getElementById("weightChart");
+  if (!container) return;
+
+  const heightCm = profile ? profile.heightCm : null;
+
+  const points = (records || getRecords())
+    .filter((r) => r.weight)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((r) => ({
+      date: r.date,
+      weight: r.weight,
+      bodyFat: r.bodyFat || null,
+      bmi: heightCm ? calcBMI(r.weight, heightCm) : null,
+    }));
+
+  if (points.length < 2) {
+    container.innerHTML = '<div class="empty-note">累積 2 筆以上有體重的紀錄，這裡就會畫出趨勢線。</div>';
+    return;
+  }
+
+  const width = 600, height = 220;
+  const padTop = 18, padBottom = 26, padLeft = 14, padRight = 14;
+  const chartW = width - padLeft - padRight;
+  const chartH = height - padTop - padBottom;
+  const stepX = points.length > 1 ? chartW / (points.length - 1) : 0;
+
+  // 幫每個指標各自算出座標點（缺值的就跳過，不會硬畫成 0）
+  function buildSeries(key) {
+    const vals = points.map((p) => p[key]).filter((v) => v !== null && v !== undefined);
+    if (vals.length < 2) return null;
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const range = max - min || 1;
+    const coords = [];
+    points.forEach((p, i) => {
+      if (p[key] === null || p[key] === undefined) return;
+      coords.push({
+        x: padLeft + stepX * i,
+        y: padTop + chartH - ((p[key] - min) / range) * chartH,
+        value: p[key],
+        date: p.date,
+      });
+    });
+    return { coords, min, max };
+  }
+
+  const series = [
+    { key: "weight", label: "體重 (kg)", color: "#f2a444", data: buildSeries("weight") },
+    { key: "bodyFat", label: "體脂肪 (%)", color: "#7fd4a0", data: buildSeries("bodyFat") },
+    { key: "bmi", label: "BMI", color: "#7fa8d4", data: buildSeries("bmi") },
+  ].filter((s) => s.data);
+
+  const linesAndDots = series
+    .map((s) => {
+      const polyline = s.data.coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+      const circles = s.data.coords
+        .map((c) => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.2" fill="${s.color}" />`)
+        .join("");
+      return `<polyline points="${polyline}" fill="none" stroke="${s.color}" stroke-width="2" />${circles}`;
+    })
+    .join("");
+
+  // 日期標籤太多會擠在一起，超過 6 筆時只標頭尾跟中間
+  const labelIdx = points.length <= 6 ? points.map((_, i) => i) : [0, Math.floor((points.length - 1) / 2), points.length - 1];
+  const dateLabels = labelIdx
+    .map((i) => {
+      const x = padLeft + stepX * i;
+      return `<text x="${x.toFixed(1)}" y="${height - 8}" font-size="10" fill="var(--text-low)" text-anchor="middle" font-family="Space Mono, monospace">${points[i].date.slice(5)}</text>`;
+    })
+    .join("");
+
+  const svg = `<svg viewBox="0 0 ${width} ${height}" style="width:100%;height:auto;display:block;">
+    <line x1="${padLeft}" y1="${padTop + chartH}" x2="${width - padRight}" y2="${padTop + chartH}" stroke="var(--line)" stroke-width="1" />
+    ${linesAndDots}
+    ${dateLabels}
+  </svg>`;
+
+  const legend = series
+    .map((s) => {
+      const latest = s.data.coords[s.data.coords.length - 1];
+      const unit = s.key === "weight" ? " kg" : s.key === "bodyFat" ? " %" : "";
+      return `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--text-mid);">
+        <span style="width:9px;height:9px;border-radius:50%;background:${s.color};display:inline-block;"></span>
+        ${s.label}：<span class="mono" style="color:var(--text-hi);">${latest.value.toFixed(1)}${unit}</span>
+      </span>`;
+    })
+    .join("");
+
+  const missingNote = !heightCm
+    ? '<div style="font-size:11.5px;color:var(--text-low);margin-top:6px;">還沒有身高資料，先在下方新增一筆紀錄時填上身高，BMI 曲線才會出現。</div>'
+    : "";
+
+  container.innerHTML = `<div style="margin-bottom:8px;">${legend}</div>${svg}${missingNote}`;
 }
 
 function handleDeleteRecord(id) {

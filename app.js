@@ -66,6 +66,13 @@ function calcProteinTarget(weightKg, multiplier = 1.4) {
   return weightKg * multiplier;
 }
 
+// BMI = 體重(kg) / 身高(m)^2
+function calcBMI(weightKg, heightCm) {
+  if (!weightKg || !heightCm) return null;
+  const heightM = heightCm / 100;
+  return weightKg / (heightM * heightM);
+}
+
 // ---------------------------------------------------------------------------
 // 推薦引擎：針對指定餐別，從資料庫中挑組合，盡量貼近熱量與蛋白質目標
 // ---------------------------------------------------------------------------

@@ -342,3 +342,53 @@ button.ghost.small {
   padding: 6px 12px;
   font-size: 12px;
 }
+
+/* ---------- 施打/身體紀錄卡片 ---------- */
+.record-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: var(--navy-700);
+}
+.record-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 13.5px;
+  color: var(--text-hi);
+}
+.record-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+}
+.rc-field {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.rc-label { color: var(--text-low); }
+.rc-value { color: var(--text-hi); font-family: 'Space Mono', monospace; }
+.record-card-note {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-size: 12px;
+  color: var(--text-mid);
+}
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-low);
+  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  line-height: 1;
+  cursor: pointer;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.icon-btn:hover { border-color: var(--warn); color: var(--warn); }
