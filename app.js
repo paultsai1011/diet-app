@@ -83,8 +83,8 @@ function recommendCombos(mealType, storeFilter, calorieTarget, proteinTarget, co
   };
 
   const combos = [];
-  const lowerBound = calorieTarget * 0.75;
-  const upperBound = calorieTarget * 1.2;
+  const lowerBound = calorieTarget * 0.7;
+  const upperBound = calorieTarget * 1.3;
 
   // 窮舉 蛋白質 x 主食 x (可選)蔬菜/湯 的組合，數量不大，直接暴力組合即可
   for (const pr of byCat.protein.length ? byCat.protein : [null]) {
@@ -246,6 +246,21 @@ function deleteMealLogEntry(id) {
 function getMealLogsForDate(date) {
   const list = JSON.parse(localStorage.getItem(LS_MEAL_LOG) || "[]");
   return list.filter((r) => r.date === date).sort((a, b) => a.mealOrder - b.mealOrder);
+}
+
+// 依日期分組，回傳每天的總熱量/蛋白質，用於「歷史紀錄」列表
+function getLogHistorySummary() {
+  const list = JSON.parse(localStorage.getItem(LS_MEAL_LOG) || "[]");
+  const byDate = {};
+  list.forEach((r) => {
+    if (!byDate[r.date]) byDate[r.date] = { date: r.date, kcal: 0, protein: 0, mealsLogged: new Set() };
+    byDate[r.date].kcal += r.kcalTotal;
+    byDate[r.date].protein += r.proteinTotal;
+    byDate[r.date].mealsLogged.add(r.meal);
+  });
+  return Object.values(byDate)
+    .map((d) => ({ ...d, mealsLogged: d.mealsLogged.size }))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
 const MEAL_ORDER = { breakfast: 0, lunch: 1, dinner: 2 };

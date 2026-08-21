@@ -173,6 +173,11 @@
     </div>
 
     <div id="dailyLogSummary" style="margin-top:16px;"></div>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
+      <label>歷史紀錄</label>
+      <div id="logHistory"></div>
+    </div>
   </section>
 
   <!-- ============ 3. 新增自訂品項 ============ -->
@@ -406,6 +411,8 @@ function renderDayPlan() {
 }
 
 // 產生（或換一組）單一餐別的建議卡片
+// 會先看「另外兩餐目前選了多少熱量/蛋白質」，用「還缺多少」當這一餐的目標，
+// 讓不管怎麼換，三餐加總都盡量貼近或不低於每日目標
 function renderMealBlock(mealType) {
   const container = document.getElementById("combo-" + mealType);
 
@@ -414,8 +421,20 @@ function renderMealBlock(mealType) {
     return;
   }
 
-  const mealCalorieTarget = profile.target / 3;
-  const mealProteinTarget = profile.protein / 3;
+  const otherMeals = MEAL_TYPES.filter((m) => m !== mealType);
+  const otherKcal = otherMeals.reduce(
+    (s, m) => s + (dayPlan[m] ? dayPlan[m].kcal : profile.target / 3),
+    0
+  );
+  const otherProtein = otherMeals.reduce(
+    (s, m) => s + (dayPlan[m] ? dayPlan[m].protein : profile.protein / 3),
+    0
+  );
+
+  // 這一餐的目標 = 每日目標扣掉另外兩餐，但不低於每日目標的 20%，避免變成 0 或負數硬湊不出組合
+  const floorKcal = profile.target * 0.2;
+  const mealCalorieTarget = Math.max(profile.target - otherKcal, floorKcal);
+  const mealProteinTarget = Math.max(profile.protein - otherProtein, profile.protein * 0.15);
 
   // 抓一批候選組合，排除目前正顯示的那組，讓「換一組」真的會換
   const pool = recommendCombos(mealType, currentStore, mealCalorieTarget, mealProteinTarget, 6);
@@ -526,6 +545,7 @@ function renderDailyLogSummary() {
 
   if (logs.length === 0) {
     el.innerHTML = `<div class="empty-note">${date} 還沒有記錄任何一餐。</div>`;
+    renderLogHistory();
     return;
   }
 
@@ -556,6 +576,42 @@ function renderDailyLogSummary() {
     ${statusHtml}
     ${rows}
   `;
+
+  renderLogHistory();
+}
+
+// 列出所有有紀錄的日期，點一下可以跳到那天查看
+function renderLogHistory() {
+  const el = document.getElementById("logHistory");
+  if (!el) return;
+  const history = getLogHistorySummary();
+  const currentDate = document.getElementById("logDate").value;
+
+  if (history.length === 0) {
+    el.innerHTML = '<div class="empty-note">還沒有任何一天的紀錄。</div>';
+    return;
+  }
+
+  el.innerHTML = history
+    .map((d) => {
+      const isActive = d.date === currentDate;
+      const isLow = profile && d.kcal < profile.bmr;
+      return `<div class="combo-card tappable${isActive ? " logged" : ""}" data-jump-date="${d.date}" style="margin-bottom:8px;">
+        <div class="combo-item">
+          <span><strong>${d.date}</strong>（${d.mealsLogged}/3 餐）</span>
+          <span class="kcal">${Math.round(d.kcal)} kcal${isLow ? " ⚠" : ""}</span>
+        </div>
+      </div>`;
+    })
+    .join("");
+
+  el.querySelectorAll("[data-jump-date]").forEach((card) => {
+    card.addEventListener("click", () => {
+      document.getElementById("logDate").value = card.dataset.jumpDate;
+      renderDailyLogSummary();
+      card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  });
 }
 
 function handleDeleteMealLog(id) {
