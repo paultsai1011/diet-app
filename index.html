@@ -50,69 +50,11 @@
     </div>
   </section>
 
-  <!-- ============ 1. 個人資料 / BMR 計算 ============ -->
+  <!-- ============ 1. 今日餐點建議 ============ -->
   <section class="card">
-    <h2><span class="num">01</span> 基本資料</h2>
+    <h2><span class="num">01</span> 今日三餐建議</h2>
 
-    <div class="pill-group" id="genderPills">
-      <button class="pill active" data-value="female">女</button>
-      <button class="pill" data-value="male">男</button>
-    </div>
-
-    <div class="field-row">
-      <div>
-        <label for="age">年齡</label>
-        <input type="number" id="age" placeholder="例如 32" min="15" max="90">
-      </div>
-      <div>
-        <label for="height">身高（cm）</label>
-        <input type="number" id="height" placeholder="例如 160" min="120" max="210">
-      </div>
-    </div>
-    <div class="field-row">
-      <div>
-        <label for="weight">目前體重（kg）</label>
-        <input type="number" id="weight" placeholder="例如 65" min="30" max="200" step="0.1">
-      </div>
-      <div>
-        <label for="activity">活動量</label>
-        <select id="activity">
-          <option value="sedentary">久坐</option>
-          <option value="light">輕度活動</option>
-          <option value="moderate">中度活動</option>
-          <option value="active">高度活動</option>
-        </select>
-      </div>
-    </div>
-
-    <label style="margin-top:6px;">熱量目標（相對於每日消耗）</label>
-    <div class="pill-group" id="deficitPills">
-      <button class="pill" data-value="0">維持</button>
-      <button class="pill active" data-value="0.15">溫和減量 -15%</button>
-      <button class="pill" data-value="0.2">中度減量 -20%</button>
-    </div>
-
-    <button class="primary" id="calcBtn">計算</button>
-
-    <div id="resultBlock" style="display:none;">
-      <div class="stat-grid">
-        <div class="stat"><div class="v mono" id="bmrVal">--</div><div class="l">基礎代謝 BMR</div></div>
-        <div class="stat"><div class="v mono" id="tdeeVal">--</div><div class="l">每日消耗 TDEE</div></div>
-        <div class="stat"><div class="v mono" id="targetVal">--</div><div class="l">每日建議攝取</div></div>
-      </div>
-      <div class="stat-grid" style="margin-top:8px;">
-        <div class="stat" style="grid-column: span 3;">
-          <div class="v mono" id="proteinVal">--</div>
-          <div class="l">每日建議蛋白質（約 1.4g/kg，優先於三餐分配）</div>
-        </div>
-      </div>
-      <div class="status-banner" id="statusBanner"></div>
-    </div>
-  </section>
-
-  <!-- ============ 2. 今日餐點建議 ============ -->
-  <section class="card">
-    <h2><span class="num">02</span> 今日三餐建議</h2>
+    <div id="targetInfoBanner"></div>
 
     <div class="field-row">
       <div>
@@ -182,9 +124,9 @@
     </div>
   </section>
 
-  <!-- ============ 3. 新增自訂品項 ============ -->
+  <!-- ============ 2. 新增自訂品項 ============ -->
   <section class="card">
-    <h2><span class="num">03</span> 新增品項</h2>
+    <h2><span class="num">02</span> 新增品項</h2>
     <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
       這一區存在你手機瀏覽器裡（不需要後端、不會花錢）。看到新品先加在這裡試用；
       確定常吃的話，之後可以直接把它寫進 <code class="mono">products.js</code> 讓所有裝置都看得到，並上傳到 GitHub。
@@ -233,13 +175,32 @@
     <button class="primary" id="addItemBtn">新增到我的品項</button>
   </section>
 
-  <!-- ============ 4. 施打與身體紀錄 ============ -->
+  <!-- ============ 3. 施打與身體紀錄 ============ -->
   <section class="card">
-    <h2><span class="num">04</span> 施打與身體紀錄</h2>
+    <h2><span class="num">03</span> 施打與身體紀錄</h2>
     <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
       資料只存在這台裝置的瀏覽器裡，不會上傳到任何伺服器。這不是醫療建議，
       實際施打頻率、部位請以醫師/藥師指示為準，這裡只是幫你記錄、提醒輪替部位跟算日期。
     </p>
+
+    <div id="resultBlock" style="display:none;margin-bottom:16px;padding-bottom:14px;border-bottom:1px dashed var(--line);">
+      <div class="stat-grid">
+        <div class="stat"><div class="v mono" id="bmrVal">--</div><div class="l">基礎代謝 BMR</div></div>
+        <div class="stat"><div class="v mono" id="tdeeVal">--</div><div class="l">每日消耗 TDEE</div></div>
+        <div class="stat"><div class="v mono" id="targetVal">--</div><div class="l">每日建議攝取</div></div>
+      </div>
+      <div class="stat-grid" style="margin-top:8px;">
+        <div class="stat" style="grid-column: span 3;">
+          <div class="v mono" id="proteinVal">--</div>
+          <div class="l">每日建議蛋白質（約 1.4g/kg，優先於三餐分配）</div>
+        </div>
+      </div>
+      <div class="status-banner" id="statusBanner"></div>
+    </div>
+    <div id="noProfileNote" class="empty-note" style="margin-bottom:16px;">
+      還沒有基本資料。新增第一筆紀錄時，年齡/身高/體重/活動量都填上就會自動算出來
+      （如果還沒真的要記錄施打，頻率選「這筆非施打，僅記錄體重」就可以）。
+    </div>
 
     <div class="field-row">
       <div>
@@ -298,8 +259,15 @@
       <label style="margin-bottom:2px;">同時更新基本資料（選填）</label>
       <p style="font-size:12px;color:var(--text-mid);margin:0 0 10px;">
         填了年齡、身高、活動量，存檔時會直接用這筆的體重重新算 BMR/TDEE，
-        更新「01 基本資料」，並沿用到你下一次更新施打紀錄為止。
+        更新上方的基本資料，並沿用到你下一次更新施打紀錄為止。
       </p>
+
+      <label>性別</label>
+      <div class="pill-group" id="genderPills">
+        <button class="pill active" data-value="female">女</button>
+        <button class="pill" data-value="male">男</button>
+      </div>
+
       <div class="field-row">
         <div>
           <label for="recAge">年齡</label>
@@ -322,6 +290,13 @@
           </select>
         </div>
         <div></div>
+      </div>
+
+      <label style="margin-top:6px;">熱量目標（相對於每日消耗）</label>
+      <div class="pill-group" id="deficitPills">
+        <button class="pill" data-value="0">維持</button>
+        <button class="pill active" data-value="0.15">溫和減量 -15%</button>
+        <button class="pill" data-value="0.2">中度減量 -20%</button>
       </div>
     </div>
 
@@ -355,10 +330,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=3"></script>
-<script src="products.js?v=3"></script>
-<script src="app.js?v=3"></script>
-<script src="sync.js?v=3"></script>
+<script src="firebase-config.js?v=6"></script>
+<script src="products.js?v=6"></script>
+<script src="app.js?v=6"></script>
+<script src="sync.js?v=6"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -395,51 +370,35 @@ document.querySelectorAll("[data-shuffle]").forEach((btn) => {
   });
 });
 
-document.getElementById("calcBtn").addEventListener("click", () => {
-  const age = parseFloat(document.getElementById("age").value);
-  const heightCm = parseFloat(document.getElementById("height").value);
-  const weightKg = parseFloat(document.getElementById("weight").value);
-  const activity = document.getElementById("activity").value;
-
-  if (!age || !heightCm || !weightKg) {
-    alert("請完整輸入年齡、身高、體重");
-    return;
-  }
-
-  const bmr = calcBMR({ gender, age, heightCm, weightKg });
-  const tdee = calcTDEE(bmr, activity);
-  const target = calcTargetCalories(bmr, tdee, deficitPct);
-  const protein = calcProteinTarget(weightKg);
-
-  profile = { bmr, tdee, target, protein, weightKg };
-  localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
-  maybeSync();
-
-  document.getElementById("bmrVal").textContent = Math.round(bmr);
-  document.getElementById("tdeeVal").textContent = Math.round(tdee);
-  document.getElementById("targetVal").textContent = Math.round(target);
-  document.getElementById("proteinVal").textContent = Math.round(protein) + " g";
-
-  const banner = document.getElementById("statusBanner");
-  const tdeeTargetRaw = tdee * (1 - deficitPct);
-  if (tdeeTargetRaw < bmr) {
-    banner.className = "status-banner warn";
-    banner.textContent =
-      "你設定的減量幅度會讓每日攝取低於基礎代謝率（BMR）。系統已自動把每日建議攝取量拉回 BMR，避免代謝率下降與肌肉流失 —— 尤其打針後食慾較差，更要顧到這條底線。";
-  } else {
-    banner.className = "status-banner ok";
-    banner.textContent = "目前的每日建議攝取量高於基礎代謝率，屬於安全範圍。";
-  }
-
-  document.getElementById("resultBlock").style.display = "block";
-  renderDayPlan();
-});
 
 function loadProfile() {
   const saved = localStorage.getItem(LS_PROFILE);
   if (saved) {
     profile = JSON.parse(saved);
   }
+}
+
+// 統一控制「基本資料」要顯示數字還是「還沒有資料」提示
+function toggleProfileDisplay() {
+  const hasProfile = !!profile;
+  document.getElementById("resultBlock").style.display = hasProfile ? "block" : "none";
+  const note = document.getElementById("noProfileNote");
+  if (note) note.style.display = hasProfile ? "none" : "block";
+  renderTargetInfoBanner();
+}
+
+// 在「三餐建議」最上方顯示每日建議攝取熱量/蛋白質，不用切到別的區塊確認
+function renderTargetInfoBanner() {
+  const el = document.getElementById("targetInfoBanner");
+  if (!el) return;
+  if (!profile) {
+    el.innerHTML = "";
+    return;
+  }
+  el.innerHTML = `<div class="status-banner ok" style="margin-bottom:14px;">
+    每日建議攝取 <strong>${Math.round(profile.target)} kcal</strong> ・ 蛋白質 <strong>${Math.round(profile.protein)} g</strong>
+    （基礎代謝 BMR ${Math.round(profile.bmr)} kcal）
+  </div>`;
 }
 
 // 一次產生早/午/晚三個區塊
@@ -731,8 +690,8 @@ if (profile) {
   document.getElementById("tdeeVal").textContent = Math.round(profile.tdee);
   document.getElementById("targetVal").textContent = Math.round(profile.target);
   document.getElementById("proteinVal").textContent = Math.round(profile.protein) + " g";
-  document.getElementById("resultBlock").style.display = "block";
 }
+toggleProfileDisplay();
 document.getElementById("logDate").value = new Date().toISOString().slice(0, 10);
 populateManualProductSelect();
 renderDayPlan();
@@ -795,11 +754,7 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
     profile = { bmr, tdee, target, protein, weightKg: weight };
     localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
 
-    // 同步更新「01 基本資料」上的欄位跟顯示，這樣兩區塊看到的數字一致
-    document.getElementById("age").value = recAge;
-    document.getElementById("height").value = recHeight;
-    document.getElementById("weight").value = weight;
-    document.getElementById("activity").value = recActivity;
+    // 同步更新上方基本資料的顯示
     document.getElementById("bmrVal").textContent = Math.round(bmr);
     document.getElementById("tdeeVal").textContent = Math.round(tdee);
     document.getElementById("targetVal").textContent = Math.round(target);
@@ -814,7 +769,7 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
       banner.className = "status-banner ok";
       banner.textContent = "目前的每日建議攝取量高於基礎代謝率，屬於安全範圍。";
     }
-    document.getElementById("resultBlock").style.display = "block";
+    toggleProfileDisplay();
     renderDayPlan();
     renderDailyLogSummary();
 
@@ -937,10 +892,8 @@ function refreshAppUI() {
     document.getElementById("tdeeVal").textContent = Math.round(profile.tdee);
     document.getElementById("targetVal").textContent = Math.round(profile.target);
     document.getElementById("proteinVal").textContent = Math.round(profile.protein) + " g";
-    document.getElementById("resultBlock").style.display = "block";
-  } else {
-    document.getElementById("resultBlock").style.display = "none";
   }
+  toggleProfileDisplay();
   populateManualProductSelect();
   renderDayPlan();
   renderRecords();
