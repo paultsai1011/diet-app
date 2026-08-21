@@ -25,7 +25,8 @@ const INJECTION_SIDES = ["左", "右"];
 // ---------------------------------------------------------------------------
 function getAllProducts() {
   const custom = JSON.parse(localStorage.getItem(LS_CUSTOM_ITEMS) || "[]");
-  return [...PRODUCTS, ...custom];
+  const community = typeof window !== "undefined" && window.COMMUNITY_PRODUCTS ? window.COMMUNITY_PRODUCTS : [];
+  return [...PRODUCTS, ...custom, ...community];
 }
 
 function saveCustomItem(item) {
@@ -107,7 +108,8 @@ function recommendCombos(mealType, storeFilter, calorieTarget, proteinTarget, co
         if (items.length === 0) continue;
         const kcal = items.reduce((s, i) => s + i.kcal, 0);
         const protein = items.reduce((s, i) => s + i.protein, 0);
-        allCombos.push({ items, kcal, protein });
+        const carbs = items.reduce((s, i) => s + (i.carbs || 0), 0);
+        allCombos.push({ items, kcal, protein, carbs });
       }
     }
   }

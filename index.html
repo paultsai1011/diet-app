@@ -284,8 +284,9 @@
   <section class="card">
     <h2><span class="num">03</span> 新增品項</h2>
     <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
-      這一區存在你手機瀏覽器裡（不需要後端、不會花錢）。看到新品先加在這裡試用；
-      確定常吃的話，之後可以直接把它寫進 <code class="mono">products.js</code> 讓所有裝置都看得到，並上傳到 GitHub。
+      沒登入的話，這裡新增的品項只存在你這台裝置。<strong>登入跨裝置同步後</strong>，
+      新增的品項會自動分享到共用資料庫，所有登入的使用者都會看到、都能拿來配三餐建議——
+      大家一起加，資料庫會越用越豐富。碳水記得也填一下，推薦系統跟紀錄畫面都會顯示這個數字。
     </p>
 
     <div class="field-row">
@@ -339,10 +340,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=10"></script>
-<script src="products.js?v=10"></script>
-<script src="app.js?v=10"></script>
-<script src="sync.js?v=10"></script>
+<script src="firebase-config.js?v=11"></script>
+<script src="products.js?v=11"></script>
+<script src="app.js?v=11"></script>
+<script src="sync.js?v=11"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -435,11 +436,12 @@ function renderDayPlanSummary() {
 
   const totalKcal = MEAL_TYPES.reduce((s, m) => s + dayPlan[m].kcal, 0);
   const totalProtein = MEAL_TYPES.reduce((s, m) => s + dayPlan[m].protein, 0);
+  const totalCarbs = MEAL_TYPES.reduce((s, m) => s + (dayPlan[m].carbs || 0), 0);
   const isLow = totalKcal < profile.bmr;
   const isUnderTarget = totalKcal < profile.target;
 
   el.innerHTML = `<div class="status-banner ${isLow ? "warn" : "ok"}" style="margin-bottom:14px;">
-    目前三餐建議合計 ${Math.round(totalKcal)} kcal（蛋白質 ${Math.round(totalProtein)} g）／ 每日目標 ${Math.round(profile.target)} kcal
+    目前三餐建議合計 ${Math.round(totalKcal)} kcal（碳水 ${Math.round(totalCarbs)}g ・ 蛋白質 ${Math.round(totalProtein)} g）／ 每日目標 ${Math.round(profile.target)} kcal
     ${isLow ? "（距離 BMR 還有落差，資料庫裡目前湊不出更高熱量的組合，建議在下方「手動記錄」多加一份點心）" : isUnderTarget ? "（略低於目標，屬於可接受範圍）" : ""}
   </div>`;
 }
@@ -489,14 +491,14 @@ function renderMealBlock(mealType) {
     .map(
       (i) => `<div class="combo-item">
         <span>${i.name}<span class="store-tag">${STORE_LABELS[i.store]}</span></span>
-        <span class="kcal">${i.kcal} kcal</span>
+        <span class="kcal">${i.kcal} kcal ・ 碳水 ${i.carbs || 0}g</span>
       </div>`
     )
     .join("");
   div.innerHTML = `
     <div class="items">${itemsHtml}</div>
     <div class="combo-total">
-      <span>合計 ${next.kcal} kcal</span>
+      <span>合計 ${next.kcal} kcal ・ 碳水 ${next.carbs || 0}g</span>
       <span>蛋白質 ${next.protein} g</span>
     </div>
     <div class="combo-tap-hint">點這裡直接記錄${MEAL_LABELS[mealType]}</div>
@@ -527,9 +529,10 @@ function logCombo(combo, cardEl, mealType) {
     date,
     meal: mealType,
     mealOrder: MEAL_ORDER[mealType],
-    items: combo.items.map((i) => ({ name: i.name, kcal: i.kcal, protein: i.protein })),
+    items: combo.items.map((i) => ({ name: i.name, kcal: i.kcal, protein: i.protein, carbs: i.carbs || 0 })),
     kcalTotal: combo.kcal,
     proteinTotal: combo.protein,
+    carbsTotal: combo.carbs || 0,
   });
   renderDailyLogSummary();
   showToast(`已記錄 ${date}・${MEAL_LABELS[mealType]}`);
@@ -549,7 +552,7 @@ function populateManualProductSelect() {
   const select = document.getElementById("manualProductSelect");
   const all = getAllProducts();
   select.innerHTML = all
-    .map((p) => `<option value="${p.id}">${p.name}（${STORE_LABELS[p.store]} · ${p.kcal} kcal）</option>`)
+    .map((p) => `<option value="${p.id}">${p.name}（${STORE_LABELS[p.store]} · ${p.kcal} kcal ・ 碳水 ${p.carbs || 0}g）</option>`)
     .join("");
 }
 
@@ -563,9 +566,10 @@ document.getElementById("manualLogBtn").addEventListener("click", () => {
     date,
     meal: mealType,
     mealOrder: MEAL_ORDER[mealType],
-    items: [{ name: product.name, kcal: product.kcal, protein: product.protein }],
+    items: [{ name: product.name, kcal: product.kcal, protein: product.protein, carbs: product.carbs || 0 }],
     kcalTotal: product.kcal,
     proteinTotal: product.protein,
+    carbsTotal: product.carbs || 0,
   });
   renderDailyLogSummary();
   showToast(`已記錄 ${date}・${MEAL_LABELS[mealType]}`);
@@ -585,6 +589,7 @@ function renderDailyLogSummary() {
 
   const totalKcal = logs.reduce((s, l) => s + l.kcalTotal, 0);
   const totalProtein = logs.reduce((s, l) => s + l.proteinTotal, 0);
+  const totalCarbs = logs.reduce((s, l) => s + (l.carbsTotal || 0), 0);
 
   let statusHtml = "";
   if (profile) {
@@ -599,14 +604,14 @@ function renderDailyLogSummary() {
     .map(
       (l) => `<div class="combo-card">
         <div class="combo-item"><span><strong>${MEAL_LABELS[l.meal]}</strong> ${l.items.map((i) => i.name).join("、")}</span></div>
-        <div class="combo-total"><span>${l.kcalTotal} kcal</span><span>蛋白質 ${l.proteinTotal} g</span></div>
+        <div class="combo-total"><span>${l.kcalTotal} kcal ・ 碳水 ${l.carbsTotal || 0}g</span><span>蛋白質 ${l.proteinTotal} g</span></div>
         <button class="ghost" style="margin-top:8px;padding:6px;font-size:12px;" onclick="handleDeleteMealLog('${l.id}')">刪除</button>
       </div>`
     )
     .join("");
 
   el.innerHTML = `
-    <label>${date} 紀錄（合計 ${Math.round(totalKcal)} kcal · 蛋白質 ${Math.round(totalProtein)} g）</label>
+    <label>${date} 紀錄（合計 ${Math.round(totalKcal)} kcal ・ 碳水 ${Math.round(totalCarbs)}g · 蛋白質 ${Math.round(totalProtein)} g）</label>
     ${statusHtml}
     ${rows}
     <button class="ghost" style="margin-top:4px;" onclick="handleDeleteDayLogs('${date}')">🗑 刪除 ${date} 整天紀錄</button>
@@ -678,8 +683,7 @@ document.getElementById("addItemBtn").addEventListener("click", () => {
     return;
   }
 
-  saveCustomItem({
-    id: "custom_" + Date.now(),
+  const newProduct = {
     name,
     store,
     category,
@@ -688,7 +692,9 @@ document.getElementById("addItemBtn").addEventListener("click", () => {
     protein,
     carbs,
     fat: 0,
-  });
+  };
+
+  saveCustomItem({ id: "custom_" + Date.now(), ...newProduct });
 
   document.getElementById("newName").value = "";
   document.getElementById("newKcal").value = "";
@@ -697,7 +703,22 @@ document.getElementById("addItemBtn").addEventListener("click", () => {
   populateManualProductSelect();
   renderDayPlan();
   maybeSync();
-  alert(name + " 已加入，現在的三餐建議會開始考慮這個品項。");
+
+  // 如果有登入，順便分享到共用資料庫，其他使用者也會看到這筆
+  if (typeof pushCommunityProduct === "function" && typeof currentUser !== "undefined" && currentUser) {
+    pushCommunityProduct(newProduct).then((ok) => {
+      if (ok) {
+        fetchCommunityProducts().then(() => {
+          populateManualProductSelect();
+          renderDayPlan();
+        });
+        showToast(name + " 已分享給其他使用者");
+      }
+    });
+    alert(name + " 已加入，現在的三餐建議會開始考慮這個品項，也會分享給其他登入使用者。");
+  } else {
+    alert(name + " 已加入，現在的三餐建議會開始考慮這個品項。\n\n（這筆只存在你這台裝置——登入跨裝置同步後新增的品項會自動分享給其他使用者。）");
+  }
 });
 
 loadProfile();
@@ -1027,6 +1048,8 @@ function refreshAppUI() {
   renderDailyLogSummary();
 }
 window.refreshAppUI = refreshAppUI;
+window.populateManualProductSelect = populateManualProductSelect;
+window.renderDayPlan = renderDayPlan;
 
 renderRecords();
 if (typeof initSyncUI === "function") initSyncUI();

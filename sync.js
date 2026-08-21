@@ -80,6 +80,38 @@ function maybeSync() {
   if (syncEnabled && currentUser) pushToCloud();
 }
 
+// ---------------------------------------------------------------------------
+// 共用品項資料庫（所有登入使用者共同貢獻、所有人都看得到）
+// 跟個人資料是分開的 Firestore collection，不會混在一起
+// ---------------------------------------------------------------------------
+window.COMMUNITY_PRODUCTS = [];
+
+async function fetchCommunityProducts() {
+  if (!syncEnabled) return;
+  try {
+    const snap = await db.collection("communityProducts").get();
+    window.COMMUNITY_PRODUCTS = snap.docs.map((d) => ({ id: "community_" + d.id, ...d.data() }));
+  } catch (e) {
+    console.warn("讀取共用品項失敗：", e);
+  }
+}
+
+// 新增一筆品項到共用資料庫，回傳是否成功
+async function pushCommunityProduct(product) {
+  if (!syncEnabled || !currentUser) return false;
+  try {
+    await db.collection("communityProducts").add({
+      ...product,
+      addedBy: currentUser.email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    return true;
+  } catch (e) {
+    console.warn("分享品項失敗：", e);
+    return false;
+  }
+}
+
 function setSyncStatus(text) {
   const el = document.getElementById("syncStatus");
   if (el) el.textContent = text;
@@ -112,6 +144,12 @@ function initSyncUI() {
     if (card) card.style.display = "none";
     return;
   }
+
+  // 共用品項是公開讀取，不用登入也能載入，讓沒登入的人也看得到大家分享的品項
+  fetchCommunityProducts().then(() => {
+    if (typeof window.populateManualProductSelect === "function") window.populateManualProductSelect();
+    if (typeof window.renderDayPlan === "function") window.renderDayPlan();
+  });
 
   auth.onAuthStateChanged(async (user) => {
     currentUser = user;

@@ -80,11 +80,19 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    match /communityProducts/{docId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
   }
 }
 ```
 
-這條規則的意思是：只有登入的本人，能讀寫自己那一份資料，其他人看不到、改不到。
+這條規則的意思是：
+- `users/{userId}`：只有登入的本人，能讀寫自己那一份資料（BMR、施打紀錄、飲食紀錄等），其他人看不到、改不到。
+- `communityProducts`：任何人都能讀（不用登入也看得到大家分享的品項），但只有登入的使用者能新增，且新增後不能被修改或刪除（避免被亂改）。
+
 貼上後按「發布」。
 
 ### 4. 取得設定值並貼進檔案
@@ -97,6 +105,10 @@ GitHub、覆蓋原本的版本即可。
 ### 5. 使用方式
 打開網站最上方會多一個「跨裝置同步」卡片，輸入 email/密碼按「註冊新帳號」，
 之後在另一台裝置用同一組帳號「登入」就會自動同步。不登入的話功能完全不受影響。
+
+登入之後，在「新增品項」區塊加的品項會自動分享到共用資料庫，所有登入使用者
+（包括還沒登入、只是打開網站看的人）都會看到、都能被推薦系統拿來配三餐。
+如果你已經完成上面第 3 步的規則設定，這個功能就會自動生效，不用額外開關。
 
 > 這幾個設定值不是密碼，是 Firebase 官方設計上可以公開放在網頁程式碼裡的值，
 > 真正的安全控管是靠上面第 3 步設定的規則。
