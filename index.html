@@ -358,10 +358,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=13"></script>
-<script src="products.js?v=13"></script>
-<script src="app.js?v=13"></script>
-<script src="sync.js?v=13"></script>
+<script src="firebase-config.js?v=14"></script>
+<script src="products.js?v=14"></script>
+<script src="app.js?v=14"></script>
+<script src="sync.js?v=14"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -618,14 +618,33 @@ function renderDailyLogSummary() {
     </div>`;
   }
 
-  const rows = logs
-    .map(
-      (l) => `<div class="combo-card">
-        <div class="combo-item"><span><strong>${MEAL_LABELS[l.meal]}</strong> ${l.items.map((i) => i.name).join("、")}</span></div>
-        <div class="combo-total"><span>${l.kcalTotal} kcal ・ 碳水 ${l.carbsTotal || 0}g</span><span>蛋白質 ${l.proteinTotal} g</span></div>
-        <button class="ghost" style="margin-top:8px;padding:6px;font-size:12px;" onclick="handleDeleteMealLog('${l.id}')">刪除</button>
-      </div>`
-    )
+  const rows = MEAL_TYPES.filter((m) => logs.some((l) => l.meal === m))
+    .map((m) => {
+      const entries = logs.filter((l) => l.meal === m);
+      const mealKcal = entries.reduce((s, e) => s + e.kcalTotal, 0);
+      const mealProtein = entries.reduce((s, e) => s + e.proteinTotal, 0);
+      const mealCarbs = entries.reduce((s, e) => s + (e.carbsTotal || 0), 0);
+
+      // 不管是點推薦組合一次記一整組、還是手動一項一項加，同一餐都合併顯示成一張卡片，
+      // 底層每一筆還是各自獨立存，個別刪除用 ✕ 就好
+      const itemLines = entries
+        .map(
+          (e) => `<div class="combo-item">
+            <span>${e.items.map((i) => i.name).join("、")}</span>
+            <span style="display:flex;align-items:center;gap:8px;">
+              <span class="kcal">${e.kcalTotal} kcal</span>
+              <button class="icon-btn" title="刪除" onclick="handleDeleteMealLog('${e.id}')">✕</button>
+            </span>
+          </div>`
+        )
+        .join("");
+
+      return `<div class="combo-card">
+        <div class="record-card-header" style="margin-bottom:8px;"><strong>${MEAL_LABELS[m]}</strong></div>
+        ${itemLines}
+        <div class="combo-total" style="margin-top:8px;"><span>合計 ${mealKcal} kcal ・ 碳水 ${mealCarbs}g</span><span>蛋白質 ${mealProtein} g</span></div>
+      </div>`;
+    })
     .join("");
 
   el.innerHTML = `
@@ -688,7 +707,7 @@ function handleDeleteDayLogs(date) {
 
 document.getElementById("logDate").addEventListener("change", renderDailyLogSummary);
 
-document.getElementById("addItemBtn").addEventListener("click", () => {
+document.getElementById("addItemBtn").addEventListener("click", async () => {
   const name = document.getElementById("newName").value.trim();
   const store = document.getElementById("newStore").value;
   const category = document.getElementById("newCategory").value;
@@ -712,29 +731,32 @@ document.getElementById("addItemBtn").addEventListener("click", () => {
     fat: 0,
   };
 
-  saveCustomItem({ id: "custom_" + Date.now(), ...newProduct });
-
   document.getElementById("newName").value = "";
   document.getElementById("newKcal").value = "";
   document.getElementById("newProtein").value = "";
   document.getElementById("newCarbs").value = "";
-  populateManualProductSelect();
-  renderDayPlan();
-  maybeSync();
 
-  // 如果有登入，順便分享到共用資料庫，其他使用者也會看到這筆
-  if (typeof pushCommunityProduct === "function" && typeof currentUser !== "undefined" && currentUser) {
-    pushCommunityProduct(newProduct).then((ok) => {
-      if (ok) {
-        fetchCommunityProducts().then(() => {
-          populateManualProductSelect();
-          renderDayPlan();
-        });
-        showToast(name + " 已分享給其他使用者");
-      }
-    });
-    alert(name + " 已加入，現在的三餐建議會開始考慮這個品項，也會分享給其他登入使用者。");
+  const isLoggedIn = typeof pushCommunityProduct === "function" && typeof currentUser !== "undefined" && currentUser;
+
+  if (isLoggedIn) {
+    // 登入的話直接分享到共用資料庫，不額外存本機一份，避免同一樣東西出現兩次
+    const ok = await pushCommunityProduct(newProduct);
+    if (ok) {
+      await fetchCommunityProducts();
+      populateManualProductSelect();
+      renderDayPlan();
+      showToast(name + " 已加入並分享給其他使用者");
+    } else {
+      // 分享失敗就退回存本機，至少這台裝置還能用
+      saveCustomItem({ id: "custom_" + Date.now(), ...newProduct });
+      populateManualProductSelect();
+      renderDayPlan();
+      alert(name + " 分享失敗，先存在這台裝置上，之後可以再試著登入分享。");
+    }
   } else {
+    saveCustomItem({ id: "custom_" + Date.now(), ...newProduct });
+    populateManualProductSelect();
+    renderDayPlan();
     alert(name + " 已加入，現在的三餐建議會開始考慮這個品項。\n\n（這筆只存在你這台裝置——登入跨裝置同步後新增的品項會自動分享給其他使用者。）");
   }
 });
@@ -973,17 +995,17 @@ function renderWeightChart(records) {
   const heightCm = profile ? profile.heightCm : null;
 
   const points = (records || getRecords())
-    .filter((r) => r.weight)
+    .filter((r) => r.weight || r.bodyFat) // 體重或體脂肪只要有一項，就要進到時間軸上，不能只看體重
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .map((r) => ({
       date: r.date,
-      weight: r.weight,
+      weight: r.weight || null,
       bodyFat: r.bodyFat || null,
-      bmi: heightCm ? calcBMI(r.weight, heightCm) : null,
+      bmi: heightCm && r.weight ? calcBMI(r.weight, heightCm) : null,
     }));
 
   if (points.length < 2) {
-    container.innerHTML = '<div class="empty-note">累積 2 筆以上有體重的紀錄，這裡就會畫出趨勢線。</div>';
+    container.innerHTML = '<div class="empty-note">累積 2 筆以上有體重或體脂肪的紀錄，這裡就會畫出趨勢線。</div>';
     return;
   }
 

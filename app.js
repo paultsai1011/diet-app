@@ -26,7 +26,19 @@ const INJECTION_SIDES = ["左", "右"];
 function getAllProducts() {
   const custom = JSON.parse(localStorage.getItem(LS_CUSTOM_ITEMS) || "[]");
   const community = typeof window !== "undefined" && window.COMMUNITY_PRODUCTS ? window.COMMUNITY_PRODUCTS : [];
-  return [...PRODUCTS, ...custom, ...community];
+  const combined = [...PRODUCTS, ...custom, ...community];
+
+  // 同一個品項可能同時存在「本機自訂」跟「共用資料庫」兩份（登入後新增品項時會兩邊都存），
+  // 用名稱+店家+熱量當作重複判斷依據，去掉重複的，只留第一個看到的
+  const seen = new Set();
+  const deduped = [];
+  combined.forEach((p) => {
+    const key = `${p.name}|${p.store}|${p.kcal}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    deduped.push(p);
+  });
+  return deduped;
 }
 
 function saveCustomItem(item) {
