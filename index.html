@@ -358,10 +358,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=15"></script>
-<script src="products.js?v=15"></script>
-<script src="app.js?v=15"></script>
-<script src="sync.js?v=15"></script>
+<script src="firebase-config.js?v=17"></script>
+<script src="products.js?v=17"></script>
+<script src="app.js?v=17"></script>
+<script src="sync.js?v=17"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -625,18 +625,27 @@ function renderDailyLogSummary() {
       const mealProtein = entries.reduce((s, e) => s + e.proteinTotal, 0);
       const mealCarbs = entries.reduce((s, e) => s + (e.carbsTotal || 0), 0);
 
-      // 不管是點推薦組合一次記一整組、還是手動一項一項加，同一餐都合併顯示成一張卡片，
-      // 底層每一筆還是各自獨立存，個別刪除用 ✕ 就好
+      // 不管是點推薦組合一次記一整組、還是手動一項一項加，同一餐都合併顯示成一張卡片。
+      // 每一筆紀錄（entry）裡的品項各自列一行、各自的熱量都看得到，跟推薦卡片長得一樣；
+      // 「這筆」整組只能一起刪，沒辦法只刪組合裡的其中一項，所以刪除鈕放在整筆的外層。
       const itemLines = entries
-        .map(
-          (e) => `<div class="combo-item">
-            <span>${e.items.map((i) => i.name).join("、")}</span>
-            <span style="display:flex;align-items:center;gap:8px;">
-              <span class="kcal">${e.kcalTotal} kcal</span>
-              <button class="icon-btn" title="刪除" onclick="handleDeleteMealLog('${e.id}')">✕</button>
-            </span>
-          </div>`
-        )
+        .map((e, idx) => {
+          const rowsHtml = e.items
+            .map(
+              (i) => `<div class="combo-item">
+                <span>${i.name}</span>
+                <span class="kcal">${i.kcal} kcal ・ 碳水 ${i.carbs || 0}g</span>
+              </div>`
+            )
+            .join("");
+          const isLast = idx === entries.length - 1;
+          return `<div style="${isLast ? "" : "padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed var(--line);"}">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:2px;">
+              <button class="icon-btn" title="刪除這筆" onclick="handleDeleteMealLog('${e.id}')">✕</button>
+            </div>
+            ${rowsHtml}
+          </div>`;
+        })
         .join("");
 
       return `<div class="combo-card">
@@ -1010,7 +1019,7 @@ function renderWeightChart(records) {
   }
 
   const width = 600, height = 220;
-  const padTop = 18, padBottom = 26, padLeft = 14, padRight = 14;
+  const padTop = 26, padBottom = 30, padLeft = 14, padRight = 14;
   const chartW = width - padLeft - padRight;
   const chartH = height - padTop - padBottom;
   const stepX = points.length > 1 ? chartW / (points.length - 1) : 0;
@@ -1050,7 +1059,24 @@ function renderWeightChart(records) {
       const circles = s.data.coords
         .map((c) => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.2" fill="${s.color}" />`)
         .join("");
-      return `<polyline points="${polyline}" fill="none" stroke="${s.color}" stroke-width="2" />${circles}`;
+
+      // 每條線各自的單位、範圍不同沒辦法共用一個 Y 軸，改成直接在最高點/最低點旁邊標數字
+      const decimals = s.key === "bmi" ? 1 : 1;
+      const maxCoord = s.data.coords.find((c) => c.value === s.data.max);
+      const minCoord = s.data.coords.find((c) => c.value === s.data.min);
+      const valueLabels = [];
+      if (maxCoord) {
+        valueLabels.push(
+          `<text x="${maxCoord.x.toFixed(1)}" y="${(maxCoord.y - 8).toFixed(1)}" font-size="9.5" fill="${s.color}" text-anchor="middle" font-family="Space Mono, monospace">${s.data.max.toFixed(decimals)}</text>`
+        );
+      }
+      if (minCoord && s.data.min !== s.data.max) {
+        valueLabels.push(
+          `<text x="${minCoord.x.toFixed(1)}" y="${(minCoord.y + 14).toFixed(1)}" font-size="9.5" fill="${s.color}" text-anchor="middle" font-family="Space Mono, monospace">${s.data.min.toFixed(decimals)}</text>`
+        );
+      }
+
+      return `<polyline points="${polyline}" fill="none" stroke="${s.color}" stroke-width="2" />${circles}${valueLabels.join("")}`;
     })
     .join("");
 
