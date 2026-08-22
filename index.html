@@ -358,10 +358,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=14"></script>
-<script src="products.js?v=14"></script>
-<script src="app.js?v=14"></script>
-<script src="sync.js?v=14"></script>
+<script src="firebase-config.js?v=15"></script>
+<script src="products.js?v=15"></script>
+<script src="app.js?v=15"></script>
+<script src="sync.js?v=15"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -1016,7 +1016,7 @@ function renderWeightChart(records) {
   const stepX = points.length > 1 ? chartW / (points.length - 1) : 0;
 
   // 幫每個指標各自算出座標點（缺值的就跳過，不會硬畫成 0）
-  function buildSeries(key) {
+  function buildSeries(key, xOffset) {
     const vals = points.map((p) => p[key]).filter((v) => v !== null && v !== undefined);
     if (vals.length < 2) return null;
     const min = Math.min(...vals);
@@ -1026,7 +1026,7 @@ function renderWeightChart(records) {
     points.forEach((p, i) => {
       if (p[key] === null || p[key] === undefined) return;
       coords.push({
-        x: padLeft + stepX * i,
+        x: padLeft + stepX * i + xOffset,
         y: padTop + chartH - ((p[key] - min) / range) * chartH,
         value: p[key],
         date: p.date,
@@ -1035,10 +1035,13 @@ function renderWeightChart(records) {
     return { coords, min, max };
   }
 
+  // 三條線各自用自己的最高/最低值正規化，資料點少的時候（例如只有 2 筆）
+  // 三條線的形狀可能會完全一樣、疊在一起，所以故意讓每條線左右錯開幾個像素，
+  // 這樣即使趨勢一樣也看得出是三條分開的線
   const series = [
-    { key: "weight", label: "體重 (kg)", color: "#f2a444", data: buildSeries("weight") },
-    { key: "bodyFat", label: "體脂肪 (%)", color: "#7fd4a0", data: buildSeries("bodyFat") },
-    { key: "bmi", label: "BMI", color: "#7fa8d4", data: buildSeries("bmi") },
+    { key: "weight", label: "體重 (kg)", color: "#f2a444", data: buildSeries("weight", -4) },
+    { key: "bodyFat", label: "體脂肪 (%)", color: "#7fd4a0", data: buildSeries("bodyFat", 0) },
+    { key: "bmi", label: "BMI", color: "#7fa8d4", data: buildSeries("bmi", 4) },
   ].filter((s) => s.data);
 
   const linesAndDots = series
