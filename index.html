@@ -317,6 +317,16 @@
       大家一起加，資料庫會越用越豐富。碳水記得也填一下，推薦系統跟紀錄畫面都會顯示這個數字。
     </p>
 
+    <div style="padding:12px 14px;background:var(--navy-700);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;">
+      <label style="margin-bottom:6px;">📷 拍營養標示自動帶入（免費、辨識在你手機上跑，不會上傳照片）</label>
+      <input type="file" accept="image/*" capture="environment" id="ocrPhotoInput" style="display:block;width:100%;color:var(--text-mid);font-size:12.5px;">
+      <div id="ocrStatus" style="font-size:12px;color:var(--text-low);margin-top:8px;"></div>
+      <details style="margin-top:6px;">
+        <summary style="font-size:11.5px;color:var(--text-low);cursor:pointer;">辨識出的原始文字（沒抓到的欄位可以自己對照這裡補）</summary>
+        <pre id="ocrRawText" style="font-size:11px;color:var(--text-mid);white-space:pre-wrap;margin-top:6px;max-height:150px;overflow-y:auto;"></pre>
+      </details>
+    </div>
+
     <div class="field-row">
       <div>
         <label for="newName">品名</label>
@@ -379,10 +389,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=19"></script>
-<script src="products.js?v=19"></script>
-<script src="app.js?v=19"></script>
-<script src="sync.js?v=19"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="firebase-config.js?v=20"></script>
+<script src="products.js?v=20"></script>
+<script src="app.js?v=20"></script>
+<script src="sync.js?v=20"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -740,6 +751,93 @@ function handleDeleteDayLogs(date) {
 }
 
 document.getElementById("logDate").addEventListener("change", renderDailyLogSummary);
+
+/* ---------------------------------------------------------------------
+   拍照辨識營養標示（Tesseract.js，免費、純瀏覽器端跑，照片不會上傳到任何地方）
+--------------------------------------------------------------------- */
+document.getElementById("ocrPhotoInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById("ocrStatus");
+  const rawTextEl = document.getElementById("ocrRawText");
+
+  if (typeof Tesseract === "undefined") {
+    statusEl.textContent = "辨識功能載入失敗，請檢查網路連線後重新整理頁面再試一次。";
+    return;
+  }
+
+  statusEl.textContent = "辨識中…（手機上跑第一次會比較慢，請稍等）";
+  rawTextEl.textContent = "";
+
+  try {
+    const result = await Tesseract.recognize(file, "chi_tra+eng", {
+      logger: (m) => {
+        if (m.status === "recognizing text") {
+          statusEl.textContent = `辨識中… ${Math.round(m.progress * 100)}%`;
+        }
+      },
+    });
+
+    const text = result.data.text || "";
+    rawTextEl.textContent = text.trim() || "（沒有辨識到文字，這張照片可能不夠清楚）";
+
+    // 用關鍵字抓數字，抓不到的就留白讓你自己填
+    const kcal = extractNumberAfterKeyword(text, ["熱量"]);
+    const protein = extractNumberAfterKeyword(text, ["蛋白質"]);
+    const carbs = extractNumberAfterKeyword(text, ["碳水化合物", "碳水"]);
+    const name = extractNameAfterKeyword(text, ["品名"]);
+
+    let filledCount = 0;
+    if (kcal !== null) {
+      document.getElementById("newKcal").value = kcal;
+      filledCount++;
+    }
+    if (protein !== null) {
+      document.getElementById("newProtein").value = protein;
+      filledCount++;
+    }
+    if (carbs !== null) {
+      document.getElementById("newCarbs").value = carbs;
+      filledCount++;
+    }
+    if (name && !document.getElementById("newName").value) {
+      document.getElementById("newName").value = name;
+    }
+
+    statusEl.textContent =
+      filledCount > 0
+        ? `已自動帶入 ${filledCount} 個欄位，數字是辨識結果，記得對照包裝確認一下再存檔。`
+        : "沒能自動抓到數字，可以展開下面「辨識出的原始文字」自己對照著填。";
+  } catch (err) {
+    console.warn("OCR 失敗：", err);
+    statusEl.textContent = "辨識失敗了，這張照片可能太模糊或角度不好，可以換一張再試，或直接手動填寫。";
+  }
+});
+
+// 在辨識出的文字裡找關鍵字後面最近的數字（支援小數點）
+function extractNumberAfterKeyword(text, keywords) {
+  for (const kw of keywords) {
+    const idx = text.indexOf(kw);
+    if (idx === -1) continue;
+    const after = text.slice(idx + kw.length, idx + kw.length + 30);
+    const match = after.match(/(\d+(\.\d+)?)/);
+    if (match) return parseFloat(match[1]);
+  }
+  return null;
+}
+
+// 抓「品名：」後面那一段文字當作品名（不一定準，讓使用者自己確認/修改）
+function extractNameAfterKeyword(text, keywords) {
+  for (const kw of keywords) {
+    const idx = text.indexOf(kw);
+    if (idx === -1) continue;
+    const after = text.slice(idx + kw.length, idx + kw.length + 40);
+    const line = after.split("\n")[0].replace(/^[:：\s]+/, "").trim();
+    if (line) return line;
+  }
+  return null;
+}
 
 document.getElementById("addItemBtn").addEventListener("click", async () => {
   const name = document.getElementById("newName").value.trim();
