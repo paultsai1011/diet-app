@@ -320,15 +320,36 @@
     <div style="padding:12px 14px;background:var(--navy-700);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;">
       <label style="margin-bottom:6px;">📷 拍營養標示自動帶入（免費、辨識在你手機上跑，不會上傳照片）</label>
       <p style="font-size:11.5px;color:var(--text-low);margin:0 0 8px;">
-        拍照秘訣（免費辨識引擎對這幾點很敏感）：只拍營養標示那張表格本身、盡量占滿畫面、
-        避免歪斜反光、光線要夠亮、拍清楚別手震。辨識還是可能不準，數字類型抓不到就手動輸入即可。
+        用「開啟相機」可以先對好框再拍，只會辨識框內範圍，通常比直接上傳整張照片準。
+        光線要夠亮、盡量對正不要歪斜。辨識還是可能不準，數字類型抓不到就手動輸入即可。
       </p>
-      <input type="file" accept="image/*" capture="environment" id="ocrPhotoInput" style="display:block;width:100%;color:var(--text-mid);font-size:12.5px;">
+      <div class="field-row" style="margin-bottom:8px;">
+        <button class="primary" id="openCameraBtn" style="margin-top:0;">📷 開啟相機拍照</button>
+        <label class="ghost" style="text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          ⬆ 從相簿選照片
+          <input type="file" accept="image/*" id="ocrPhotoInput" style="display:none;">
+        </label>
+      </div>
       <div id="ocrStatus" style="font-size:12px;color:var(--text-low);margin-top:8px;"></div>
       <details style="margin-top:6px;">
         <summary style="font-size:11.5px;color:var(--text-low);cursor:pointer;">辨識出的原始文字（沒抓到的欄位可以自己對照這裡補）</summary>
         <pre id="ocrRawText" style="font-size:11px;color:var(--text-mid);white-space:pre-wrap;margin-top:6px;max-height:150px;overflow-y:auto;"></pre>
       </details>
+    </div>
+
+    <!-- 相機拍照對齊框 modal -->
+    <div id="cameraModal" class="camera-modal" style="display:none;">
+      <div class="camera-modal-inner">
+        <div class="camera-video-wrap" id="cameraVideoWrap">
+          <video id="cameraVideo" autoplay playsinline muted></video>
+          <div class="camera-frame-guide"></div>
+          <div class="camera-hint">把營養標示表格對齊框內</div>
+        </div>
+        <div class="camera-controls">
+          <button class="ghost" id="cameraCancelBtn">取消</button>
+          <button class="primary" id="cameraCaptureBtn" style="margin-top:0;">📸 拍照</button>
+        </div>
+      </div>
     </div>
 
     <div class="field-row">
@@ -394,10 +415,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="firebase-config.js?v=21"></script>
-<script src="products.js?v=21"></script>
-<script src="app.js?v=21"></script>
-<script src="sync.js?v=21"></script>
+<script src="firebase-config.js?v=22"></script>
+<script src="products.js?v=22"></script>
+<script src="app.js?v=22"></script>
+<script src="sync.js?v=22"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -797,10 +818,8 @@ function preprocessImageForOCR(file) {
   });
 }
 
-document.getElementById("ocrPhotoInput").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
+// 共用的 OCR 處理流程：不管圖片來自「相簿上傳」還是「相機拍照裁切」，都走這一條
+async function runOcrOnImageSource(imageSource) {
   const statusEl = document.getElementById("ocrStatus");
   const rawTextEl = document.getElementById("ocrRawText");
 
@@ -813,7 +832,7 @@ document.getElementById("ocrPhotoInput").addEventListener("change", async (e) =>
   rawTextEl.textContent = "";
 
   try {
-    const processedImage = await preprocessImageForOCR(file);
+    const processedImage = await preprocessImageForOCR(imageSource);
 
     statusEl.textContent = "辨識中…（手機上跑第一次會比較慢，請稍等）";
     const result = await Tesseract.recognize(processedImage, "chi_tra+eng", {
@@ -858,7 +877,103 @@ document.getElementById("ocrPhotoInput").addEventListener("change", async (e) =>
     console.warn("OCR 失敗：", err);
     statusEl.textContent = "辨識失敗了，這張照片可能太模糊或角度不好，可以換一張再試，或直接手動填寫。";
   }
+}
+
+document.getElementById("ocrPhotoInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  runOcrOnImageSource(file);
+  e.target.value = ""; // 讓同一張照片可以重選一次
 });
+
+/* ---------------------------------------------------------------------
+   相機拍照對齊框：用 getUserMedia 開相機、疊一個對齊框，拍照時只裁切框內範圍
+--------------------------------------------------------------------- */
+let cameraStream = null;
+
+async function openCamera() {
+  const modal = document.getElementById("cameraModal");
+  const video = document.getElementById("cameraVideo");
+  const statusEl = document.getElementById("ocrStatus");
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    statusEl.textContent = "這個瀏覽器不支援相機直接拍照，請改用「從相簿選照片」。";
+    return;
+  }
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false,
+    });
+    video.srcObject = cameraStream;
+    modal.style.display = "flex";
+  } catch (err) {
+    console.warn("開啟相機失敗：", err);
+    statusEl.textContent = "無法開啟相機（可能是沒給權限），請改用「從相簿選照片」，或檢查瀏覽器相機權限設定。";
+  }
+}
+
+function closeCamera() {
+  const modal = document.getElementById("cameraModal");
+  modal.style.display = "none";
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((t) => t.stop());
+    cameraStream = null;
+  }
+}
+
+// 對齊框在畫面上的位置（跟 CSS .camera-frame-guide 對應：left 10%, top 15%, width 80%, height 70%）
+const CAMERA_GUIDE_RECT = { fx: 0.1, fy: 0.15, fw: 0.8, fh: 0.7 };
+
+function capturePhotoFromCamera() {
+  const video = document.getElementById("cameraVideo");
+  const wrap = document.getElementById("cameraVideoWrap");
+
+  const videoAspect = video.videoWidth / video.videoHeight;
+  const containerAspect = wrap.clientWidth / wrap.clientHeight;
+
+  // object-fit: cover 會裁切影像，要還原「畫面上看到的框」對應到「相機原始影像的哪個範圍」
+  let renderedWidth, renderedHeight, offsetX, offsetY;
+  if (videoAspect > containerAspect) {
+    renderedHeight = wrap.clientHeight;
+    renderedWidth = renderedHeight * videoAspect;
+    offsetX = (renderedWidth - wrap.clientWidth) / 2;
+    offsetY = 0;
+  } else {
+    renderedWidth = wrap.clientWidth;
+    renderedHeight = renderedWidth / videoAspect;
+    offsetX = 0;
+    offsetY = (renderedHeight - wrap.clientHeight) / 2;
+  }
+  const scale = video.videoWidth / renderedWidth;
+
+  const guideXInRendered = CAMERA_GUIDE_RECT.fx * wrap.clientWidth + offsetX;
+  const guideYInRendered = CAMERA_GUIDE_RECT.fy * wrap.clientHeight + offsetY;
+  const guideWInRendered = CAMERA_GUIDE_RECT.fw * wrap.clientWidth;
+  const guideHInRendered = CAMERA_GUIDE_RECT.fh * wrap.clientHeight;
+
+  const sx = guideXInRendered * scale;
+  const sy = guideYInRendered * scale;
+  const sw = guideWInRendered * scale;
+  const sh = guideHInRendered * scale;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = sw;
+  canvas.height = sh;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  closeCamera();
+
+  canvas.toBlob((blob) => {
+    if (blob) runOcrOnImageSource(blob);
+  }, "image/png");
+}
+
+document.getElementById("openCameraBtn").addEventListener("click", openCamera);
+document.getElementById("cameraCancelBtn").addEventListener("click", closeCamera);
+document.getElementById("cameraCaptureBtn").addEventListener("click", capturePhotoFromCamera);
 
 // 在辨識出的文字裡找關鍵字後面最近的數字（支援小數點）
 function extractNumberAfterKeyword(text, keywords) {
