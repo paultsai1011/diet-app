@@ -79,6 +79,20 @@ const PRODUCTS = [
   { id: "p20", name: "堅果棒", store: "family", category: "protein", meals: ["breakfast","lunch","dinner"], kcal: 180, protein: 6, carbs: 16, fat: 11, note: "點心/加餐用" },
   { id: "p21", name: "大亨堡（起司）", store: "family", category: "carb", meals: ["breakfast","lunch"], kcal: 320, protein: 12, carbs: 30, fat: 16 },
   { id: "p22", name: "牛肉燴飯", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 480, protein: 20, carbs: 65, fat: 15 },
+
+  // ---------- 7-11：先有名稱+熱量（來自官網商品列表），蛋白質/碳水待補 ----------
+  { id: "p23", name: "極饗-香腸雙拼便當", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 701, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
+  { id: "p24", name: "Homeal x 壹番屋 奶油咖哩雞肉飯", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 592, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
+  { id: "p25", name: "Homeal x 日式牛丼", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 497, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
+  { id: "p26", name: "Homeal x 鄧師傅-客家小炒", store: "711", category: "protein", meals: ["lunch","dinner"], kcal: 310, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
+  { id: "p27", name: "Homeal x 鄧師傅-鳳梨糖醋肉", store: "711", category: "protein", meals: ["lunch","dinner"], kcal: 409, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
+
+  // ---------- 全家：有查到公開發布的完整/部分數據，來源是全家官方或營養師報導 ----------
+  { id: "f01", name: "烤蛋白餐盒(健康志向)", store: "family", category: "carb", meals: ["lunch","dinner"], kcal: 463, protein: 22.2, carbs: 53.3, fat: 17.8 },
+  { id: "f02", name: "健身G肉餐盒", store: "family", category: "carb", meals: ["lunch","dinner"], kcal: 588, protein: 29, carbs: 0, fat: 0, note: "碳水/脂肪待更新" },
+  { id: "f03", name: "大麥蛋白豬肉堡", store: "family", category: "carb", meals: ["breakfast","lunch"], kcal: 325, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
+  { id: "f04", name: "莎莎烤雞麵沙拉", store: "family", category: "carb", meals: ["lunch","dinner"], kcal: 391, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
+  { id: "f05", name: "青醬優格雞肉握沙拉", store: "family", category: "carb", meals: ["breakfast","lunch"], kcal: 478, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
 ];
 
 /* 品項分類與餐別的中文對照表，UI 會用到 */

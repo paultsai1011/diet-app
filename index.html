@@ -293,6 +293,12 @@
           </select>
         </div>
         <div>
+          <label for="manualProductSearch">搜尋品項</label>
+          <input type="text" id="manualProductSearch" placeholder="輸入名稱，例如：雞胸">
+        </div>
+      </div>
+      <div class="field-row">
+        <div style="grid-column: span 2;">
           <label for="manualProductSelect">品項</label>
           <select id="manualProductSelect"></select>
         </div>
@@ -379,10 +385,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=23"></script>
-<script src="products.js?v=23"></script>
-<script src="app.js?v=23"></script>
-<script src="sync.js?v=23"></script>
+<script src="firebase-config.js?v=24"></script>
+<script src="products.js?v=24"></script>
+<script src="app.js?v=24"></script>
+<script src="sync.js?v=24"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -591,13 +597,23 @@ function logCombo(combo, cardEl, mealType) {
   }
 }
 
-function populateManualProductSelect() {
+// searchTerm 有值時只顯示名稱包含關鍵字的品項（不分大小寫），做簡單的模糊搜尋
+function populateManualProductSelect(searchTerm) {
   const select = document.getElementById("manualProductSelect");
   const all = getAllProducts();
-  select.innerHTML = all
-    .map((p) => `<option value="${p.id}">${p.name}（${STORE_LABELS[p.store]} · ${p.kcal} kcal ・ 碳水 ${p.carbs || 0}g）</option>`)
-    .join("");
+  const term = (searchTerm || "").trim().toLowerCase();
+  const filtered = term ? all.filter((p) => p.name.toLowerCase().includes(term)) : all;
+
+  select.innerHTML = filtered.length
+    ? filtered
+        .map((p) => `<option value="${p.id}">${p.name}（${STORE_LABELS[p.store]} · ${p.kcal} kcal ・ 碳水 ${p.carbs || 0}g）</option>`)
+        .join("")
+    : '<option value="">（沒有符合的品項）</option>';
 }
+
+document.getElementById("manualProductSearch").addEventListener("input", (e) => {
+  populateManualProductSelect(e.target.value);
+});
 
 document.getElementById("manualLogBtn").addEventListener("click", () => {
   const select = document.getElementById("manualProductSelect");
