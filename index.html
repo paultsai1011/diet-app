@@ -17,41 +17,46 @@
 
 <main>
 
-  <!-- ============ 0. 雲端同步（選填） ============ -->
+  <!-- ============ 0. 雲端同步（選填，可收合） ============ -->
   <section class="card" id="syncCard">
-    <h2><span class="num">☁</span> 跨裝置同步</h2>
-    <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
-      登入後，這台裝置的資料會跟雲端同步；換一台裝置用同一組帳號登入，資料會一起過去。
-      不登入也完全可以用，資料就只留在這台裝置。
-    </p>
+    <h2 id="syncToggleHeader" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+      <span><span class="num">☁</span> 跨裝置同步 <span id="syncHeaderStatus" style="font-size:11px;color:var(--text-low);font-weight:400;"></span></span>
+      <span id="syncChevron" style="font-size:12px;color:var(--text-low);">展開 ▾</span>
+    </h2>
+    <div id="syncBody" style="display:none;">
+      <p style="font-size:12.5px;color:var(--text-mid);margin-top:6px;">
+        登入後，這台裝置的資料會跟雲端同步；換一台裝置用同一組帳號登入，資料會一起過去。
+        不登入也完全可以用，資料就只留在這台裝置。
+      </p>
 
-    <div id="syncLoginForm">
-      <div class="field-row">
-        <div>
-          <label for="syncEmail">Email</label>
-          <input type="email" id="syncEmail" placeholder="you@example.com">
+      <div id="syncLoginForm">
+        <div class="field-row">
+          <div>
+            <label for="syncEmail">Email</label>
+            <input type="email" id="syncEmail" placeholder="you@example.com">
+          </div>
+          <div>
+            <label for="syncPassword">密碼</label>
+            <input type="password" id="syncPassword" placeholder="至少 6 個字元">
+          </div>
         </div>
-        <div>
-          <label for="syncPassword">密碼</label>
-          <input type="password" id="syncPassword" placeholder="至少 6 個字元">
+        <div class="field-row">
+          <button class="primary" id="syncLoginBtn" style="margin-top:0;">登入</button>
+          <button class="ghost" id="syncRegisterBtn">註冊新帳號</button>
         </div>
       </div>
-      <div class="field-row">
-        <button class="primary" id="syncLoginBtn" style="margin-top:0;">登入</button>
-        <button class="ghost" id="syncRegisterBtn">註冊新帳號</button>
-      </div>
-    </div>
 
-    <div id="syncLoggedIn" style="display:none;">
-      <div class="status-banner ok">
-        已登入：<span id="syncEmailLabel"></span> · <span id="syncStatus">已同步</span>
+      <div id="syncLoggedIn" style="display:none;">
+        <div class="status-banner ok">
+          已登入：<span id="syncEmailLabel"></span> · <span id="syncStatus">已同步</span>
+        </div>
+        <button class="ghost" id="syncLogoutBtn" style="margin-top:10px;">登出</button>
       </div>
-      <button class="ghost" id="syncLogoutBtn" style="margin-top:10px;">登出</button>
     </div>
   </section>
 
   <!-- ============ 1. 施打與身體紀錄 ============ -->
-  <section class="card">
+  <section class="card" data-tab="injection">
     <h2><span class="num">01</span> 施打與身體紀錄</h2>
     <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
       資料只存在這台裝置的瀏覽器裡，不會上傳到任何伺服器。這不是醫療建議，
@@ -230,7 +235,7 @@
   </section>
 
   <!-- ============ 2. 今日餐點建議 ============ -->
-  <section class="card">
+  <section class="card" data-tab="meals">
     <h2><span class="num">02</span> 今日三餐建議</h2>
 
     <div id="targetInfoBanner"></div>
@@ -304,7 +309,7 @@
   </section>
 
   <!-- ============ 3. 新增自訂品項 ============ -->
-  <section class="card">
+  <section class="card" data-tab="additem">
     <h2><span class="num">03</span> 新增品項</h2>
     <p style="font-size:12.5px;color:var(--text-mid);margin-top:-6px;">
       沒登入的話，這裡新增的品項只存在你這台裝置。<strong>登入跨裝置同步後</strong>，
@@ -355,18 +360,29 @@
     <button class="primary" id="addItemBtn">新增到我的品項</button>
   </section>
 
-
 </main>
+
+<nav class="bottom-nav">
+  <button class="bottom-nav-btn active" data-tab-btn="injection">
+    <span class="bn-icon">💉</span><span class="bn-label">施打/身體</span>
+  </button>
+  <button class="bottom-nav-btn" data-tab-btn="meals">
+    <span class="bn-icon">🍱</span><span class="bn-label">三餐建議</span>
+  </button>
+  <button class="bottom-nav-btn" data-tab-btn="additem">
+    <span class="bn-icon">➕</span><span class="bn-label">新增品項</span>
+  </button>
+</nav>
 
 <footer>超商飲控 · 純前端運算，資料只留在你的裝置上 · 營養數值為估計值，請以包裝標示為準</footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=18"></script>
-<script src="products.js?v=18"></script>
-<script src="app.js?v=18"></script>
-<script src="sync.js?v=18"></script>
+<script src="firebase-config.js?v=19"></script>
+<script src="products.js?v=19"></script>
+<script src="app.js?v=19"></script>
+<script src="sync.js?v=19"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -1147,6 +1163,36 @@ window.renderDayPlan = renderDayPlan;
 
 renderRecords();
 if (typeof initSyncUI === "function") initSyncUI();
+
+/* ---------------------------------------------------------------------
+   底部分頁切換
+--------------------------------------------------------------------- */
+function switchTab(tabName) {
+  document.querySelectorAll("[data-tab]").forEach((el) => {
+    el.style.display = el.dataset.tab === tabName ? "block" : "none";
+  });
+  document.querySelectorAll("[data-tab-btn]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tabBtn === tabName);
+  });
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+}
+
+document.querySelectorAll("[data-tab-btn]").forEach((btn) => {
+  btn.addEventListener("click", () => switchTab(btn.dataset.tabBtn));
+});
+
+switchTab("injection"); // 預設分頁
+
+/* ---------------------------------------------------------------------
+   雲端同步卡片：可收合，平常收起來，不占空間
+--------------------------------------------------------------------- */
+document.getElementById("syncToggleHeader").addEventListener("click", () => {
+  const body = document.getElementById("syncBody");
+  const chevron = document.getElementById("syncChevron");
+  const isOpen = body.style.display !== "none";
+  body.style.display = isOpen ? "none" : "block";
+  chevron.textContent = isOpen ? "展開 ▾" : "收合 ▴";
+});
 </script>
 
 </body>

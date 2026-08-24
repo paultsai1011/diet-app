@@ -121,6 +121,7 @@ function updateAuthUI(user) {
   const loginForm = document.getElementById("syncLoginForm");
   const loggedInView = document.getElementById("syncLoggedIn");
   const emailLabel = document.getElementById("syncEmailLabel");
+  const headerStatus = document.getElementById("syncHeaderStatus");
 
   if (!syncEnabled) {
     document.getElementById("syncCard").style.display = "none";
@@ -132,9 +133,11 @@ function updateAuthUI(user) {
     loggedInView.style.display = "block";
     emailLabel.textContent = user.email;
     setSyncStatus("✓ 已同步");
+    if (headerStatus) headerStatus.textContent = "· 已登入 " + user.email;
   } else {
     loginForm.style.display = "block";
     loggedInView.style.display = "none";
+    if (headerStatus) headerStatus.textContent = "· 未登入";
   }
 }
 
