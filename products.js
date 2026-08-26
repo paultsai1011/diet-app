@@ -93,6 +93,46 @@ const PRODUCTS = [
   { id: "f03", name: "大麥蛋白豬肉堡", store: "family", category: "carb", meals: ["breakfast","lunch"], kcal: 325, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
   { id: "f04", name: "莎莎烤雞麵沙拉", store: "family", category: "carb", meals: ["lunch","dinner"], kcal: 391, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
   { id: "f05", name: "青醬優格雞肉握沙拉", store: "family", category: "carb", meals: ["breakfast","lunch"], kcal: 478, protein: 0, carbs: 0, fat: 0, note: "蛋白質/碳水待更新" },
+
+  // ---------- 7-11 Simple Fit 活動頁（product_data.html?v=250613，官方 JSON 資料，數字可信度高） ----------
+  // 「補充膳纖」分類：官網標示為每 100 克營養素，實際購買重量請自行對照包裝調整
+  { id: "sf01", name: "現蒸地瓜", store: "711", category: "carb", meals: ["breakfast","lunch","dinner"], kcal: 121, protein: 1.8, fat: 0.5, carbs: 27.4, note: "每100克營養標示" },
+  { id: "sf02", name: "現烤地瓜", store: "711", category: "carb", meals: ["breakfast","lunch","dinner"], kcal: 120, protein: 1.4, fat: 0.3, carbs: 28.0, note: "每100克營養標示" },
+  { id: "sf03", name: "黃金玉米", store: "711", category: "carb", meals: ["breakfast","lunch","dinner"], kcal: 93, protein: 3.1, fat: 2.1, carbs: 15.4, note: "每100克營養標示" },
+  { id: "sf04", name: "糯玉米", store: "711", category: "carb", meals: ["breakfast","lunch","dinner"], kcal: 156, protein: 4.3, fat: 1.8, carbs: 30.8, note: "每100克營養標示" },
+
+  // 「一日野菜」分類
+  { id: "sf05", name: "香蒜雞胸鮮蔬餐盒", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 359, protein: 20, fat: 9.8, carbs: 47.6 },
+  { id: "sf06", name: "糯麥菇菇雞湯沙拉", store: "711", category: "soup", meals: ["lunch","dinner"], kcal: 90, protein: 8.1, fat: 2.1, carbs: 10.4 },
+  { id: "sf07", name: "薯泥鮮蔬蛋沙拉", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 153, protein: 4.0, fat: 9.4, carbs: 13.2 },
+  { id: "sf08", name: "一日野菜-活力彩蔬", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 98, protein: 2.6, fat: 3.3, carbs: 14.4 },
+  { id: "sf09", name: "一日野菜-海藻沙拉", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 49, protein: 1.6, fat: 1.7, carbs: 6.9 },
+  { id: "sf10", name: "凱薩雞肉沙拉", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 204, protein: 11.1, fat: 14.6, carbs: 7.0 },
+  { id: "sf11", name: "豆酥烤魚鮮蔬餐盒", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 418, protein: 24.2, fat: 16.7, carbs: 42.7 },
+
+  // 「減醣飲食」分類
+  { id: "sf12", name: "搖搖沙拉-溏心蛋鮪魚", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 232, protein: 7.9, fat: 18.3, carbs: 9.0 },
+  { id: "sf13", name: "搖搖沙拉-明太子蝦蝦", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 145, protein: 3.8, fat: 6.8, carbs: 17.1 },
+  { id: "sf14", name: "和風生鮭繽紛時蔬沙拉餐", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 159, protein: 6.2, fat: 11.2, carbs: 8.4 },
+  { id: "sf15", name: "溏心蛋洋芋", store: "711", category: "veg", meals: ["breakfast","lunch","dinner"], kcal: 176, protein: 6.2, fat: 9.9, carbs: 15.6 },
+  { id: "sf16", name: "鮮蝦蛋沙拉", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 221, protein: 6.4, fat: 17.9, carbs: 8.6 },
+  { id: "sf17", name: "優格彩蔬棒沙拉", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 114, protein: 2.1, fat: 8.6, carbs: 7.1 },
+  { id: "sf18", name: "韓式泡菜冷烏龍麵", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 410, protein: 10.4, fat: 10.4, carbs: 68.8 },
+  { id: "sf19", name: "日式雞蛋沙拉三明治", store: "711", category: "carb", meals: ["breakfast","lunch"], kcal: 247, protein: 8.3, fat: 13.2, carbs: 23.8 },
+  { id: "sf20", name: "鮪魚雞肉蔬菜捲餅", store: "711", category: "carb", meals: ["breakfast","lunch"], kcal: 310, protein: 8.2, fat: 17.6, carbs: 29.6 },
+
+  // 「蛋白質系列」分類
+  { id: "sf21", name: "21PLUS主廚烤雞時蔬餐", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 432, protein: 25.5, fat: 16.6, carbs: 45.1 },
+  { id: "sf22", name: "越式酸辣雞絲冷麵", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 397, protein: 17.5, fat: 11.4, carbs: 56.2 },
+  { id: "sf23", name: "21 Plus義式烤雞堅果沙拉", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 207, protein: 14.0, fat: 11.8, carbs: 11.3 },
+  { id: "sf24", name: "地瓜雞胸肉沙拉", store: "711", category: "veg", meals: ["breakfast","lunch","dinner"], kcal: 126, protein: 10.9, fat: 4.7, carbs: 9.9 },
+  { id: "sf25", name: "義式烤番茄雞胸時蔬沙拉餐", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 165, protein: 12.6, fat: 4.0, carbs: 19.6 },
+  { id: "sf26", name: "北海道蕎麥風味沾麵", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 336, protein: 13.6, fat: 4.9, carbs: 59.3 },
+  { id: "sf27", name: "溏心蛋紐奧良風味烤雞三明治", store: "711", category: "carb", meals: ["breakfast","lunch"], kcal: 235, protein: 15.3, fat: 10.1, carbs: 20.7 },
+  { id: "sf28", name: "凱薩風味嫩雞鮮蔬捲餅", store: "711", category: "carb", meals: ["breakfast","lunch"], kcal: 320, protein: 12.6, fat: 15.9, carbs: 31.5 },
+  { id: "sf29", name: "吉士豬肉堡加蛋", store: "711", category: "carb", meals: ["breakfast","lunch"], kcal: 276, protein: 16.2, fat: 11.0, carbs: 28.0 },
+  { id: "sf30", name: "櫛瓜溏心蛋時蔬沙拉餐", store: "711", category: "veg", meals: ["lunch","dinner"], kcal: 172, protein: 12.8, fat: 5.3, carbs: 18.3 },
+  { id: "sf31", name: "烤雞纖穀時蔬沙拉餐", store: "711", category: "carb", meals: ["lunch","dinner"], kcal: 318, protein: 13.3, fat: 23.2, carbs: 20.2 },
 ];
 
 /* 品項分類與餐別的中文對照表，UI 會用到 */
