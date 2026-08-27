@@ -385,10 +385,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=28"></script>
-<script src="products.js?v=28"></script>
-<script src="app.js?v=28"></script>
-<script src="sync.js?v=28"></script>
+<script src="firebase-config.js?v=30"></script>
+<script src="products.js?v=30"></script>
+<script src="app.js?v=30"></script>
+<script src="sync.js?v=30"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -708,8 +708,8 @@ function renderDailyLogSummary() {
 }
 
 // 列出所有有紀錄的日期，點一下可以跳到那天查看
-let logHistoryLimit = 3; // 飲食歷史預設只顯示最近幾天，點「顯示更多」再展開
-let recordListLimit = 3; // 施打/身體紀錄歷史預設只顯示最近幾筆
+let logHistoryLimit = 5; // 飲食歷史預設只顯示最近幾天，點「顯示更多」再展開
+let recordListLimit = 5; // 施打/身體紀錄歷史預設只顯示最近幾筆
 
 function renderLogHistory() {
   const el = document.getElementById("logHistory");
@@ -1134,8 +1134,12 @@ function renderWeightChart(records) {
   }));
 
   const polyline = coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+  // 每個點疊一個透明的大圓當「點擊熱區」（手機手指點小圓點不好點準），加上真正看得到的小圓點
   const circles = coords
-    .map((c) => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="${meta.color}" />`)
+    .map(
+      (c, i) => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="${meta.color}" style="pointer-events:none;" />
+        <circle class="chart-hit" data-idx="${i}" cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="12" fill="transparent" style="cursor:pointer;" />`
+    )
     .join("");
 
   const labelIdx = coords.length <= 6 ? coords.map((_, i) => i) : [0, Math.floor((coords.length - 1) / 2), coords.length - 1];
@@ -1162,7 +1166,19 @@ function renderWeightChart(records) {
     ${meta.label} 最新：<span class="mono" style="color:var(--text-hi);">${latest.value.toFixed(meta.decimals)}${meta.unit}</span>
   </div>`;
 
-  container.innerHTML = `${legend}${svg}`;
+  container.innerHTML = `${legend}${svg}<div id="chartPointInfo" style="margin-top:6px;font-size:12.5px;color:var(--text-low);min-height:18px;">點圖上的點可以看那一天的數值</div>`;
+
+  // 點任何一個點，下面顯示那個點的日期跟數值
+  container.querySelectorAll(".chart-hit").forEach((hit) => {
+    hit.addEventListener("click", () => {
+      const idx = parseInt(hit.dataset.idx, 10);
+      const c = coords[idx];
+      const infoEl = document.getElementById("chartPointInfo");
+      if (infoEl) {
+        infoEl.innerHTML = `📍 <strong style="color:var(--text-hi);">${c.date}</strong>：<span class="mono" style="color:${meta.color};">${c.value.toFixed(meta.decimals)}${meta.unit}</span>`;
+      }
+    });
+  });
 }
 
 function handleDeleteRecord(id) {
