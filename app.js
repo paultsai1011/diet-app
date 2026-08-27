@@ -193,31 +193,34 @@ function calcNextInjectionDate(lastDateStr, frequencyKey, customDays) {
 }
 
 // 建議下一個施打部位（部位+左右側）：跟最近一次不同，並在腹部左右等位置之間輪替
+// 建議下一個施打部位（部位+左右側）：只在「使用者實際打過的部位」之間輪替，
+// 絕對不會自己擴大範圍去推薦沒打過的部位（例如只打腹部，就永遠只在腹部左右之間輪替）
 function suggestNextSite(records) {
-  const withSite = records.filter((r) => r.site).slice(0, 6); // 最近幾筆
-  // 組成完整輪替清單，例如「腹部-左」「腹部-右」「大腿-左」...
-  const allCombos = [];
-  INJECTION_SITES.forEach((site) => {
-    INJECTION_SIDES.forEach((side) => allCombos.push(site + "-" + side));
-  });
+  const withSite = records.filter((r) => r.site); // getRecords() 本身已經新到舊排序
 
-  if (withSite.length === 0) return allCombos[0];
+  if (withSite.length === 0) return INJECTION_SITES[0] + "-" + INJECTION_SIDES[0]; // 沒紀錄過，預設腹部-左
 
-  const recentCombos = withSite.map((r) => r.site + (r.side ? "-" + r.side : ""));
-  const lastCombo = recentCombos[0];
+  const usedSites = [...new Set(withSite.map((r) => r.site))];
+  const last = withSite[0];
 
-  // 如果最近都打同一個部位（例如都是腹部），就只在該部位的左右側之間輪替
-  const lastSiteOnly = (lastCombo.split("-")[0]) || allCombos[0].split("-")[0];
-  const sameSiteCombos = allCombos.filter((c) => c.startsWith(lastSiteOnly));
-  const notRecentSameSite = sameSiteCombos.filter((c) => !recentCombos.includes(c));
-  if (notRecentSameSite.length > 0) return notRecentSameSite[0];
+  // 使用者從頭到尾只用過一個部位（例如一直都是腹部），就直接跟上次相反的左右側輪替，
+  // 不去理會 INJECTION_SITES 裡其他沒用過的部位
+  if (usedSites.length === 1) {
+    const nextSide = last.side === "左" ? "右" : "左";
+    return last.site + "-" + nextSide;
+  }
 
-  // 找完全沒用過的部位
-  const notRecentlyUsed = allCombos.filter((c) => !recentCombos.includes(c));
-  if (notRecentlyUsed.length > 0) return notRecentlyUsed[0];
+  // 使用者歷史上真的用過不只一個部位，才在這些「用過的部位」之間輪替（含左右側）
+  const combos = [];
+  usedSites.forEach((site) => INJECTION_SIDES.forEach((side) => combos.push(site + "-" + side)));
 
-  // 全部用過的話，至少避開跟上一次一樣
-  return allCombos.find((c) => c !== lastCombo) || allCombos[0];
+  const recentCombos = withSite.slice(0, combos.length).map((r) => r.site + "-" + (r.side || ""));
+  const lastCombo = last.site + "-" + (last.side || "");
+
+  const notRecent = combos.filter((c) => !recentCombos.includes(c));
+  if (notRecent.length > 0) return notRecent[0];
+
+  return combos.find((c) => c !== lastCombo) || combos[0];
 }
 
 // 算兩筆紀錄之間的變化（體重、體脂），給前端顯示趨勢用
