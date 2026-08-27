@@ -385,10 +385,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=27"></script>
-<script src="products.js?v=27"></script>
-<script src="app.js?v=27"></script>
-<script src="sync.js?v=27"></script>
+<script src="firebase-config.js?v=28"></script>
+<script src="products.js?v=28"></script>
+<script src="app.js?v=28"></script>
+<script src="sync.js?v=28"></script>
 <script>
 /* ---------------------------------------------------------------------
    UI wiring
@@ -708,6 +708,9 @@ function renderDailyLogSummary() {
 }
 
 // 列出所有有紀錄的日期，點一下可以跳到那天查看
+let logHistoryLimit = 7; // 飲食歷史預設只顯示最近幾天，點「顯示更多」再展開
+let recordListLimit = 10; // 施打/身體紀錄歷史預設只顯示最近幾筆
+
 function renderLogHistory() {
   const el = document.getElementById("logHistory");
   if (!el) return;
@@ -719,7 +722,10 @@ function renderLogHistory() {
     return;
   }
 
-  el.innerHTML = history
+  const visible = history.slice(0, logHistoryLimit);
+  const remaining = history.length - visible.length;
+
+  const rowsHtml = visible
     .map((d) => {
       const isActive = d.date === currentDate;
       const isLow = profile && d.kcal < profile.bmr;
@@ -732,6 +738,13 @@ function renderLogHistory() {
     })
     .join("");
 
+  const moreBtnHtml =
+    remaining > 0
+      ? `<button class="ghost" id="logHistoryMoreBtn">顯示更多（還有 ${remaining} 天）</button>`
+      : "";
+
+  el.innerHTML = rowsHtml + moreBtnHtml;
+
   el.querySelectorAll("[data-jump-date]").forEach((card) => {
     card.addEventListener("click", () => {
       document.getElementById("logDate").value = card.dataset.jumpDate;
@@ -739,6 +752,14 @@ function renderLogHistory() {
       card.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   });
+
+  const moreBtn = document.getElementById("logHistoryMoreBtn");
+  if (moreBtn) {
+    moreBtn.addEventListener("click", () => {
+      logHistoryLimit += 7;
+      renderLogHistory();
+    });
+  }
 }
 
 function handleDeleteMealLog(id) {
@@ -981,14 +1002,17 @@ function renderRecords() {
     trendBanner.style.display = "none";
   }
 
-  // 列表
+  // 列表（限制顯示筆數，點「顯示更多」再展開，避免紀錄一多就要一直滑）
   if (records.length === 0) {
     list.innerHTML = '<div class="empty-note">還沒有紀錄，新增第一筆吧。</div>';
     renderWeightChart(records);
     return;
   }
 
-  list.innerHTML = records
+  const visibleRecords = records.slice(0, recordListLimit);
+  const remainingRecords = records.length - visibleRecords.length;
+
+  const rowsHtml = visibleRecords
     .map((r) => {
       const isInjection = !!(r.frequency || r.site);
       const isBody = !!(r.weight || r.bodyFat);
@@ -1031,6 +1055,21 @@ function renderRecords() {
         </div>`;
     })
     .join("");
+
+  const moreBtnHtml =
+    remainingRecords > 0
+      ? `<button class="ghost" id="recordListMoreBtn">顯示更多（還有 ${remainingRecords} 筆）</button>`
+      : "";
+
+  list.innerHTML = rowsHtml + moreBtnHtml;
+
+  const moreBtn = document.getElementById("recordListMoreBtn");
+  if (moreBtn) {
+    moreBtn.addEventListener("click", () => {
+      recordListLimit += 10;
+      renderRecords();
+    });
+  }
 
   renderWeightChart(records);
 }
